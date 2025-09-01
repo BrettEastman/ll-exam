@@ -23,6 +23,7 @@ export default function StaffNotation({
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>([]);
   const [currentClef, setCurrentClef] = useState<"treble" | "bass">(initialClef);
   const [selectedAccidental, setSelectedAccidental] = useState<string | null>(null);
+  const [eraseMode, setEraseMode] = useState<boolean>(false);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -157,16 +158,34 @@ export default function StaffNotation({
     // console.log("Resulting note:", noteName);
     // console.log("==================");
 
-    // Check if there's already a note on this line
-    const existingNoteIndex = placedNotes.findIndex(
-      (note) => note.line === line
-    );
-
-    if (existingNoteIndex >= 0) {
-      // Remove the note if it exists
-      setPlacedNotes((prev) =>
-        prev.filter((_, index) => index !== existingNoteIndex)
-      );
+    if (eraseMode) {
+      // In erase mode, find the closest note to the click and remove it
+      if (placedNotes.length > 0) {
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+        
+        placedNotes.forEach((note, index) => {
+          // Calculate distance between click and note position
+          const noteX = 50 + (index * 50); // Same positioning logic as rendering
+          const noteY = 76.67 + (note.line * 5); // Convert line to Y position (same as getStaffLine logic)
+          const clickX = x / 1.5; // Convert click coordinates
+          const clickY = y / 1.5;
+          
+          const distance = Math.sqrt(
+            Math.pow(clickX - noteX, 2) + Math.pow(clickY - noteY, 2)
+          );
+          
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+        
+        // Remove the closest note (with reasonable distance threshold)
+        if (closestDistance < 100) { // 100px threshold
+          setPlacedNotes((prev) => prev.filter((_, index) => index !== closestIndex));
+        }
+      }
     } else {
       // Add a new note with selected accidental
       setPlacedNotes((prev) => [...prev, { 
@@ -203,8 +222,8 @@ export default function StaffNotation({
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === null ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === null ? "white" : "black",
+              backgroundColor: selectedAccidental === null && !eraseMode ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === null && !eraseMode ? "white" : "black",
               border: "1px solid #ccc"
             }}
           >
@@ -215,8 +234,8 @@ export default function StaffNotation({
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "#" ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "#" ? "white" : "black",
+              backgroundColor: selectedAccidental === "#" && !eraseMode ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "#" && !eraseMode ? "white" : "black",
               border: "1px solid #ccc"
             }}
           >
@@ -227,8 +246,8 @@ export default function StaffNotation({
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "b" ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "b" ? "white" : "black",
+              backgroundColor: selectedAccidental === "b" && !eraseMode ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "b" && !eraseMode ? "white" : "black",
               border: "1px solid #ccc"
             }}
           >
@@ -239,17 +258,40 @@ export default function StaffNotation({
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "n" ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "n" ? "white" : "black",
+              backgroundColor: selectedAccidental === "n" && !eraseMode ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "n" && !eraseMode ? "white" : "black",
               border: "1px solid #ccc"
             }}
           >
             ♮ Natural
           </button>
         </div>
+        
+        {/* Erase Mode */}
+        <div>
+          <button 
+            onClick={() => {
+              setEraseMode(!eraseMode);
+              if (!eraseMode) setSelectedAccidental(null); // Clear accidental when entering erase mode
+            }}
+            style={{ 
+              padding: "5px 15px",
+              backgroundColor: eraseMode ? "#dc3545" : "#f8f9fa",
+              color: eraseMode ? "white" : "black",
+              border: "1px solid #ccc",
+              fontWeight: eraseMode ? "bold" : "normal"
+            }}
+          >
+            {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
+          </button>
+        </div>
       </div>
       
-      <p>Click on the staff to place notes • Click existing notes to remove them</p>
+      <p>
+        {eraseMode 
+          ? "🗑️ ERASE MODE: Click on notes to remove them" 
+          : "Click on the staff to place notes • Use Erase Mode to remove notes"}
+      </p>
       
       <svg
         ref={svgRef}
