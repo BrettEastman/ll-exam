@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Renderer, Stave, StaveNote, TickContext } from "vexflow";
+import { Renderer, Stave, StaveNote, TickContext, Accidental } from "vexflow";
 
 interface StaffNotationProps {
   width?: number;
@@ -17,10 +17,12 @@ interface PlacedNote {
 export default function StaffNotation({
   width = 600,
   height = 200,
-  clef = "treble",
+  clef: initialClef = "treble",
 }: StaffNotationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>([]);
+  const [currentClef, setCurrentClef] = useState<"treble" | "bass">(initialClef);
+  const [selectedAccidental, setSelectedAccidental] = useState<string | null>(null);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -35,7 +37,7 @@ export default function StaffNotation({
 
     // Create a stave
     const stave = new Stave(10, 40, width - 20);
-    stave.addClef(clef);
+    stave.addClef(currentClef);
     stave.setContext(context).draw();
 
     // If there are placed notes, render them individually
@@ -43,15 +45,16 @@ export default function StaffNotation({
       try {
         // Draw notes one by one without using TickContext (simpler approach)
         placedNotes.forEach((note, index) => {
-          const noteString = getNoteName(note.line, clef);
+          const noteString = getNoteName(note.line, currentClef);
           const vfNote = new StaveNote({
-            clef,
+            clef: currentClef,
             keys: [noteString],
             duration: "q",
           });
 
           if (note.accidental) {
-            vfNote.addModifier(note.accidental);
+            const accidental = new Accidental(note.accidental);
+            vfNote.addModifier(accidental, 0);
           }
 
           // Set position and render
@@ -70,7 +73,7 @@ export default function StaffNotation({
         console.error("Error rendering notes:", error);
       }
     }
-  }, [placedNotes, width, height, clef]);
+  }, [placedNotes, width, height, currentClef]);
 
   // Convert staff line position to note name
   const getNoteName = (line: number, clef: "treble" | "bass"): string => {
@@ -138,7 +141,7 @@ export default function StaffNotation({
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     const line = getStaffLine(y);
-    const noteName = getNoteName(line, clef);
+    const noteName = getNoteName(line, currentClef);
 
     // Detailed debugging
     const vexflowY = y / 1.5;
@@ -165,14 +168,89 @@ export default function StaffNotation({
         prev.filter((_, index) => index !== existingNoteIndex)
       );
     } else {
-      // Add a new note
-      setPlacedNotes((prev) => [...prev, { line }]);
+      // Add a new note with selected accidental
+      setPlacedNotes((prev) => [...prev, { 
+        line, 
+        accidental: selectedAccidental || undefined 
+      }]);
     }
   };
 
   return (
     <div>
-      <h3>Click on the staff to place/remove notes</h3>
+      <h3>Interactive Music Notation</h3>
+      
+      {/* Controls */}
+      <div style={{ marginBottom: "20px", display: "flex", gap: "20px", alignItems: "center" }}>
+        {/* Clef Selection */}
+        <div>
+          <label style={{ marginRight: "10px" }}>Clef:</label>
+          <select 
+            value={currentClef} 
+            onChange={(e) => setCurrentClef(e.target.value as "treble" | "bass")}
+            style={{ padding: "5px" }}
+          >
+            <option value="treble">Treble</option>
+            <option value="bass">Bass</option>
+          </select>
+        </div>
+        
+        {/* Accidental Selection */}
+        <div>
+          <label style={{ marginRight: "10px" }}>Accidental:</label>
+          <button 
+            onClick={() => setSelectedAccidental(null)}
+            style={{ 
+              padding: "5px 10px", 
+              margin: "0 2px",
+              backgroundColor: selectedAccidental === null ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === null ? "white" : "black",
+              border: "1px solid #ccc"
+            }}
+          >
+            None
+          </button>
+          <button 
+            onClick={() => setSelectedAccidental("#")}
+            style={{ 
+              padding: "5px 10px", 
+              margin: "0 2px",
+              backgroundColor: selectedAccidental === "#" ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "#" ? "white" : "black",
+              border: "1px solid #ccc"
+            }}
+          >
+            ♯ Sharp
+          </button>
+          <button 
+            onClick={() => setSelectedAccidental("b")}
+            style={{ 
+              padding: "5px 10px", 
+              margin: "0 2px",
+              backgroundColor: selectedAccidental === "b" ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "b" ? "white" : "black",
+              border: "1px solid #ccc"
+            }}
+          >
+            ♭ Flat
+          </button>
+          <button 
+            onClick={() => setSelectedAccidental("n")}
+            style={{ 
+              padding: "5px 10px", 
+              margin: "0 2px",
+              backgroundColor: selectedAccidental === "n" ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "n" ? "white" : "black",
+              border: "1px solid #ccc"
+            }}
+          >
+            ♮ Natural
+          </button>
+        </div>
+      </div>
+      
+      <p>Click on the staff to place notes • Click existing notes to remove them</p>
+      
       <svg
         ref={svgRef}
         width={width}
@@ -186,16 +264,20 @@ export default function StaffNotation({
           marginBottom: "20px",
         }}
       />
+      
       <div style={{ marginTop: "100px" }}>
         <p>Placed notes: {placedNotes.length}</p>
         <div>
           {placedNotes.map((note, index) => (
             <div key={index}>
-              Line {note.line}: {getNoteName(note.line, clef)}
+              Line {note.line}: {getNoteName(note.line, currentClef)}
+              {note.accidental && ` (${note.accidental === '#' ? 'Sharp' : note.accidental === 'b' ? 'Flat' : 'Natural'})`}
             </div>
           ))}
         </div>
-        <button onClick={() => setPlacedNotes([])}>Clear All Notes</button>
+        <button onClick={() => setPlacedNotes([])} style={{ marginTop: "10px", padding: "10px 20px" }}>
+          Clear All Notes
+        </button>
       </div>
     </div>
   );

@@ -35,6 +35,13 @@ Interactive web-based music theory entrance exam for a music camp, replacing tra
 - State-driven progression with view state management
 - 60-minute timer with automatic submission
 
+## Key Libraries & Documentation
+
+- **VexFlow**: https://0xfe.github.io/vexflow/api/index.html
+  - Music notation rendering library
+  - Key concepts: Renderer, Context, Stave, Voice, Formatter
+  - Focus on StaveNote, Accidental, KeySignature classes
+
 ### Interactive Music Notation
 
 - VexFlow integration for staff rendering
