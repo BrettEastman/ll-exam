@@ -14,6 +14,19 @@ interface PlacedNote {
   accidental?: string;
 }
 
+// D Major scale definition: D, E, F#, G, A, B, C# (octave-agnostic)
+const D_MAJOR_SCALE = [
+  { note: "d", accidental: null },
+  { note: "e", accidental: null },
+  { note: "f", accidental: "#" },
+  { note: "g", accidental: null },
+  { note: "a", accidental: null },
+  { note: "b", accidental: null },
+  { note: "c", accidental: "#" }
+];
+
+const MAX_NOTES = 7;
+
 export default function StaffNotation({
   width = 600,
   height = 200,
@@ -24,6 +37,8 @@ export default function StaffNotation({
   const [currentClef, setCurrentClef] = useState<"treble" | "bass">(initialClef);
   const [selectedAccidental, setSelectedAccidental] = useState<string | null>(null);
   const [eraseMode, setEraseMode] = useState<boolean>(false);
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [gradeResult, setGradeResult] = useState<any>(null);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -187,17 +202,74 @@ export default function StaffNotation({
         }
       }
     } else {
-      // Add a new note with selected accidental
-      setPlacedNotes((prev) => [...prev, { 
-        line, 
-        accidental: selectedAccidental || undefined 
-      }]);
+      // Add a new note with selected accidental (if under limit and not submitted)
+      if (placedNotes.length < MAX_NOTES && !isSubmitted) {
+        setPlacedNotes((prev) => [...prev, { 
+          line, 
+          accidental: selectedAccidental || undefined 
+        }]);
+      }
     }
+  };
+
+  // Convert a placed note to a comparable format (octave-agnostic)
+  const noteToString = (note: PlacedNote): string => {
+    const noteName = getNoteName(note.line, currentClef);
+    const [noteOnly, octave] = noteName.split('/');
+    const accidental = note.accidental || '';
+    return `${noteOnly}${accidental}`; // Remove octave from comparison
+  };
+
+  // Grade the student's scale entry
+  const gradeScale = () => {
+    const studentNotes = placedNotes.map(noteToString);
+    const correctScale = D_MAJOR_SCALE.map(note => 
+      `${note.note}${note.accidental || ''}` // Remove octave from correct scale too
+    );
+
+    const results = {
+      correct: [] as string[],
+      incorrect: [] as string[],
+      missing: [] as string[],
+      score: 0
+    };
+
+    // Check each student note
+    studentNotes.forEach((studentNote, index) => {
+      if (index < correctScale.length && studentNote === correctScale[index]) {
+        results.correct.push(studentNote);
+      } else {
+        results.incorrect.push(studentNote);
+      }
+    });
+
+    // Find missing notes
+    correctScale.forEach((correctNote, index) => {
+      if (!studentNotes[index] || studentNotes[index] !== correctNote) {
+        results.missing.push(correctNote);
+      }
+    });
+
+    results.score = Math.round((results.correct.length / correctScale.length) * 100);
+    
+    setGradeResult(results);
+    setIsSubmitted(true);
+  };
+
+  // Reset the exercise
+  const resetExercise = () => {
+    setPlacedNotes([]);
+    setIsSubmitted(false);
+    setGradeResult(null);
+    setEraseMode(false);
+    setSelectedAccidental(null);
   };
 
   return (
     <div>
-      <h3>Interactive Music Notation</h3>
+      <h3>D Major Scale Exercise</h3>
+      <p><strong>Instructions:</strong> Enter the D Major scale notes in order: D, E, F♯, G, A, B, C♯</p>
+      <p><em>Note: You can place the notes in any octave - only the note names and accidentals matter!</em></p>
       
       {/* Controls */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "20px", alignItems: "center" }}>
@@ -208,6 +280,7 @@ export default function StaffNotation({
             value={currentClef} 
             onChange={(e) => setCurrentClef(e.target.value as "treble" | "bass")}
             style={{ padding: "5px" }}
+            disabled={isSubmitted}
           >
             <option value="treble">Treble</option>
             <option value="bass">Bass</option>
@@ -219,48 +292,56 @@ export default function StaffNotation({
           <label style={{ marginRight: "10px" }}>Accidental:</label>
           <button 
             onClick={() => setSelectedAccidental(null)}
+            disabled={isSubmitted}
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === null && !eraseMode ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === null && !eraseMode ? "white" : "black",
-              border: "1px solid #ccc"
+              backgroundColor: selectedAccidental === null && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === null && !eraseMode && !isSubmitted ? "white" : "black",
+              border: "1px solid #ccc",
+              opacity: isSubmitted ? 0.5 : 1
             }}
           >
             None
           </button>
           <button 
             onClick={() => setSelectedAccidental("#")}
+            disabled={isSubmitted}
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "#" && !eraseMode ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "#" && !eraseMode ? "white" : "black",
-              border: "1px solid #ccc"
+              backgroundColor: selectedAccidental === "#" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "#" && !eraseMode && !isSubmitted ? "white" : "black",
+              border: "1px solid #ccc",
+              opacity: isSubmitted ? 0.5 : 1
             }}
           >
             ♯ Sharp
           </button>
           <button 
             onClick={() => setSelectedAccidental("b")}
+            disabled={isSubmitted}
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "b" && !eraseMode ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "b" && !eraseMode ? "white" : "black",
-              border: "1px solid #ccc"
+              backgroundColor: selectedAccidental === "b" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "b" && !eraseMode && !isSubmitted ? "white" : "black",
+              border: "1px solid #ccc",
+              opacity: isSubmitted ? 0.5 : 1
             }}
           >
             ♭ Flat
           </button>
           <button 
             onClick={() => setSelectedAccidental("n")}
+            disabled={isSubmitted}
             style={{ 
               padding: "5px 10px", 
               margin: "0 2px",
-              backgroundColor: selectedAccidental === "n" && !eraseMode ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "n" && !eraseMode ? "white" : "black",
-              border: "1px solid #ccc"
+              backgroundColor: selectedAccidental === "n" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
+              color: selectedAccidental === "n" && !eraseMode && !isSubmitted ? "white" : "black",
+              border: "1px solid #ccc",
+              opacity: isSubmitted ? 0.5 : 1
             }}
           >
             ♮ Natural
@@ -268,29 +349,68 @@ export default function StaffNotation({
         </div>
         
         {/* Erase Mode */}
+        {!isSubmitted && (
+          <div>
+            <button 
+              onClick={() => {
+                setEraseMode(!eraseMode);
+                if (!eraseMode) setSelectedAccidental(null); // Clear accidental when entering erase mode
+              }}
+              style={{ 
+                padding: "5px 15px",
+                backgroundColor: eraseMode ? "#dc3545" : "#f8f9fa",
+                color: eraseMode ? "white" : "black",
+                border: "1px solid #ccc",
+                fontWeight: eraseMode ? "bold" : "normal"
+              }}
+            >
+              {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
+            </button>
+          </div>
+        )}
+        
+        {/* Submit/Reset Buttons */}
         <div>
-          <button 
-            onClick={() => {
-              setEraseMode(!eraseMode);
-              if (!eraseMode) setSelectedAccidental(null); // Clear accidental when entering erase mode
-            }}
-            style={{ 
-              padding: "5px 15px",
-              backgroundColor: eraseMode ? "#dc3545" : "#f8f9fa",
-              color: eraseMode ? "white" : "black",
-              border: "1px solid #ccc",
-              fontWeight: eraseMode ? "bold" : "normal"
-            }}
-          >
-            {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
-          </button>
+          {!isSubmitted ? (
+            <button 
+              onClick={gradeScale}
+              disabled={placedNotes.length === 0}
+              style={{ 
+                padding: "8px 20px",
+                backgroundColor: placedNotes.length > 0 ? "#28a745" : "#f8f9fa",
+                color: placedNotes.length > 0 ? "white" : "black",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+                opacity: placedNotes.length === 0 ? 0.5 : 1
+              }}
+            >
+              Submit Scale ({placedNotes.length}/{MAX_NOTES})
+            </button>
+          ) : (
+            <button 
+              onClick={resetExercise}
+              style={{ 
+                padding: "8px 20px",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "1px solid #007bff",
+                fontWeight: "bold"
+              }}
+            >
+              Try Again
+            </button>
+          )}
         </div>
       </div>
       
       <p>
-        {eraseMode 
+        {isSubmitted 
+          ? "Exercise submitted - view results below" 
+          : eraseMode 
           ? "🗑️ ERASE MODE: Click on notes to remove them" 
-          : "Click on the staff to place notes • Use Erase Mode to remove notes"}
+          : placedNotes.length >= MAX_NOTES 
+          ? "Maximum 7 notes reached - click Submit to grade your scale" 
+          : `Click on the staff to place notes (${placedNotes.length}/${MAX_NOTES})`}
       </p>
       
       <svg
@@ -308,18 +428,65 @@ export default function StaffNotation({
       />
       
       <div style={{ marginTop: "100px" }}>
-        <p>Placed notes: {placedNotes.length}</p>
-        <div>
-          {placedNotes.map((note, index) => (
-            <div key={index}>
-              Line {note.line}: {getNoteName(note.line, currentClef)}
-              {note.accidental && ` (${note.accidental === '#' ? 'Sharp' : note.accidental === 'b' ? 'Flat' : 'Natural'})`}
+        {/* Grading Results */}
+        {isSubmitted && gradeResult && (
+          <div style={{ 
+            padding: "20px", 
+            border: "2px solid #ccc", 
+            borderRadius: "8px",
+            backgroundColor: gradeResult.score >= 70 ? "#d4edda" : "#f8d7da",
+            marginBottom: "20px"
+          }}>
+            <h4>Scale Exercise Results</h4>
+            <p style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}>
+              Score: {gradeResult.score}% 
+              {gradeResult.score >= 90 ? " 🎉 Excellent!" : 
+               gradeResult.score >= 70 ? " 👍 Good!" : " 📚 Keep practicing!"}
+            </p>
+            
+            {gradeResult.correct.length > 0 && (
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "green" }}>✓ Correct notes:</strong> {gradeResult.correct.join(", ")}
+              </div>
+            )}
+            
+            {gradeResult.incorrect.length > 0 && (
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "red" }}>✗ Incorrect notes:</strong> {gradeResult.incorrect.join(", ")}
+              </div>
+            )}
+            
+            {gradeResult.missing.length > 0 && (
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "orange" }}>⚠ Missing notes:</strong> {gradeResult.missing.join(", ")}
+              </div>
+            )}
+            
+            <div style={{ marginTop: "15px", fontSize: "14px", color: "#666" }}>
+              <strong>Correct D Major Scale:</strong> D, E, F♯, G, A, B, C♯ (any octave)
             </div>
-          ))}
-        </div>
-        <button onClick={() => setPlacedNotes([])} style={{ marginTop: "10px", padding: "10px 20px" }}>
-          Clear All Notes
-        </button>
+          </div>
+        )}
+
+        {/* Current Notes Display */}
+        {!isSubmitted && (
+          <div>
+            <p>Current notes: {placedNotes.length}/{MAX_NOTES}</p>
+            <div>
+              {placedNotes.map((note, index) => (
+                <div key={index}>
+                  {index + 1}. {getNoteName(note.line, currentClef)}
+                  {note.accidental && ` (${note.accidental === '#' ? 'Sharp' : note.accidental === 'b' ? 'Flat' : 'Natural'})`}
+                </div>
+              ))}
+            </div>
+            {placedNotes.length > 0 && (
+              <button onClick={() => setPlacedNotes([])} style={{ marginTop: "10px", padding: "10px 20px" }}>
+                Clear All Notes
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
