@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Flow, Renderer, Stave, StaveNote, TickContext } from "vexflow";
+import { Renderer, Stave, StaveNote, TickContext } from "vexflow";
 
 interface StaffNotationProps {
   width?: number;
@@ -118,10 +118,10 @@ export default function StaffNotation({
     const vexflowY = y / 1.5;
 
     // Using F and E line data to calculate correct spacing:
-    // F: VexFlow Y = 81.67, should be index 1  
+    // F: VexFlow Y = 81.67, should be index 1
     // E: VexFlow Y = 121, should be index 9
     // Distance between F and E: 121 - 81.67 = 39.33
-    // Index difference: 9 - 1 = 8 
+    // Index difference: 9 - 1 = 8
     // So lineSpacing = 39.33 / 8 = 4.92 ≈ 5
     const staveTop = 76.67; // 81.67 - (1 * 5) = 76.67
     const lineSpacing = 5;
@@ -143,16 +143,16 @@ export default function StaffNotation({
     // Detailed debugging
     const vexflowY = y / 1.5;
     const relativeY = vexflowY - 76.67;
-    
-    console.log("=== CLICK DEBUG ===");
-    console.log("Raw click position:", { clientX: event.clientX, clientY: event.clientY });
-    console.log("SVG rect:", { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-    console.log("Click in SVG space:", { x, y });
-    console.log("Converted to VexFlow Y:", vexflowY);
-    console.log("Relative to staff top (76.67):", relativeY);
-    console.log("Calculated line index:", line);
-    console.log("Resulting note:", noteName);
-    console.log("==================");
+
+    // console.log("=== CLICK DEBUG ===");
+    // console.log("Raw click position:", { clientX: event.clientX, clientY: event.clientY });
+    // console.log("SVG rect:", { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    // console.log("Click in SVG space:", { x, y });
+    // console.log("Converted to VexFlow Y:", vexflowY);
+    // console.log("Relative to staff top (76.67):", relativeY);
+    // console.log("Calculated line index:", line);
+    // console.log("Resulting note:", noteName);
+    // console.log("==================");
 
     // Check if there's already a note on this line
     const existingNoteIndex = placedNotes.findIndex(
