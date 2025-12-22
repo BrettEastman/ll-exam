@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Renderer, Stave } from "vexflow";
+import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
+import {
+  Box,
+  Text,
+  Button,
+  HStack,
+  VStack,
+  Select,
+  Card,
+  Heading,
+  createListCollection,
+} from "@chakra-ui/react";
 
 interface PlacedAccidental {
   note: string; // e.g., 'f/5', 'c/5' (VexFlow notation)
@@ -17,7 +29,7 @@ const D_MAJOR_KEY_SIGNATURE = [
 const MAX_ACCIDENTALS = 7; // Most key signatures have 7 sharps or flats
 
 export default function KeySignatureExercise() {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const staveRef = useRef<InstanceType<typeof Stave> | null>(null);
   const [placedAccidentals, setPlacedAccidentals] = useState<
     PlacedAccidental[]
@@ -35,68 +47,82 @@ export default function KeySignatureExercise() {
     score: number;
   } | null>(null);
 
+  const clefCollection = useMemo(
+    () =>
+      createListCollection({
+        items: [
+          { value: "treble", label: "Treble" },
+          { value: "bass", label: "Bass" },
+        ],
+      }),
+    []
+  );
+
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!containerRef.current) return;
 
-    // Clear previous content
-    svgRef.current.innerHTML = "";
-
-    // Create VexFlow renderer
-    const renderer = new Renderer(
-      svgRef.current as unknown as HTMLDivElement,
-      Renderer.Backends.SVG
-    );
-    renderer.resize(600, 200);
-    const context = renderer.getContext();
-
-    // Create a stave
-    const stave = new Stave(10, 40, 580);
-    stave.addClef(currentClef);
-    staveRef.current = stave;
-
-    // Render individual accidentals using text (simpler approach)
-    if (placedAccidentals.length > 0) {
+    // Load VexFlow fonts before rendering
+    const loadAndRender = async () => {
       try {
-        placedAccidentals.forEach((accidental, index) => {
-          // Calculate X position for each accidental (space them out)
-          const x = 60 + index * 25; // Start after clef, space 25px apart
+        // Ensure fonts are loaded (only loads once globally)
+        await ensureVexFlowFonts();
 
-          // Calculate Y position using VexFlow's coordinate system
-          const noteY = getNoteYPosition(accidental.note, currentClef);
+        // Clear previous content
+        containerRef.current!.innerHTML = "";
 
-          // Use Unicode symbols for accidentals
-          const symbol = accidental.type === "#" ? "♯" : "♭";
+        // Create VexFlow renderer using SVG backend
+        const renderer = new Renderer(containerRef.current!, Renderer.Backends.SVG);
+        renderer.resize(600, 200);
+        const context = renderer.getContext();
 
-          console.log(
-            `Rendering text accidental: ${symbol} at x=${x}, y=${noteY}`
-          );
+        // Create a stave
+        const stave = new Stave(10, 40, 580);
+        stave.addClef(currentClef);
+        staveRef.current = stave;
 
-          // Render as text directly on SVG
-          const svg = svgRef.current;
-          if (svg) {
-            const textElement = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "text"
-            );
-            textElement.setAttribute("x", x.toString());
-            textElement.setAttribute("y", noteY.toString());
-            textElement.setAttribute("font-family", "serif");
-            textElement.setAttribute("font-size", "24");
-            textElement.setAttribute("text-anchor", "middle");
-            textElement.setAttribute("dominant-baseline", "central");
-            textElement.setAttribute("fill", "black");
-            textElement.textContent = symbol;
+        // Render individual accidentals using text (simpler approach)
+        if (placedAccidentals.length > 0) {
+          try {
+            placedAccidentals.forEach((accidental, index) => {
+              // Calculate X position for each accidental (space them out)
+              const x = 60 + index * 25; // Start after clef, space 25px apart
 
-            svg.appendChild(textElement);
-            console.log(`Successfully rendered text accidental: ${symbol}`);
-          } else {
-            console.error(`SVG ref not available`);
+              // Calculate Y position using VexFlow's coordinate system
+              const noteY = getNoteYPosition(accidental.note, currentClef);
+
+              // Use Unicode symbols for accidentals
+              const symbol = accidental.type === "#" ? "♯" : "♭";
+
+              console.log(
+                `Rendering text accidental: ${symbol} at x=${x}, y=${noteY}`
+              );
+
+              // Render as text directly on SVG
+              const svg = containerRef.current?.querySelector("svg");
+              if (svg) {
+                const textElement = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "text"
+                );
+                textElement.setAttribute("x", x.toString());
+                textElement.setAttribute("y", noteY.toString());
+                textElement.setAttribute("font-family", "serif");
+                textElement.setAttribute("font-size", "24");
+                textElement.setAttribute("text-anchor", "middle");
+                textElement.setAttribute("dominant-baseline", "central");
+                textElement.setAttribute("fill", "black");
+                textElement.textContent = symbol;
+
+                svg.appendChild(textElement);
+                console.log(`Successfully rendered text accidental: ${symbol}`);
+              } else {
+                console.error(`SVG not available in container`);
+              }
+            });
+          } catch (error) {
+            console.error("Error rendering accidentals:", error);
           }
-        });
-      } catch (error) {
-        console.error("Error rendering accidentals:", error);
-      }
-    }
+        }
 
     // // Add debug labels to show staff positions
     // if (placedAccidentals.length === 0) {
@@ -129,7 +155,13 @@ export default function KeySignatureExercise() {
     //   }
     // }
 
-    stave.setContext(context).draw();
+        stave.setContext(context).draw();
+      } catch (error) {
+        console.error("Error loading VexFlow fonts:", error);
+      }
+    };
+
+    loadAndRender();
   }, [placedAccidentals, currentClef]);
 
   // Get Y position for a note on the staff
@@ -220,10 +252,14 @@ export default function KeySignatureExercise() {
     return !invalidCombinations.includes(combination);
   };
 
-  const handleStaffClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const handleStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
 
+    // Get the SVG that VexFlow created inside the container
+    const svg = containerRef.current.querySelector('svg');
+    if (!svg) return;
+
+    const rect = svg.getBoundingClientRect();
     const y = event.clientY - rect.top;
     const note = getNoteFromClick(y);
 
@@ -335,144 +371,134 @@ export default function KeySignatureExercise() {
   };
 
   return (
-    <div>
-      <p>
-        <strong>Instructions:</strong> Place the correct accidentals for D Major
-        key signature
-      </p>
-      <p>
-        <em>Hint: D Major has 2 sharps - F♯ and C♯</em>
-      </p>
+    <VStack align="stretch" gap={6}>
+      <Box>
+        <Text fontWeight="bold" mb={2}>
+          Instructions:
+        </Text>
+        <Text mb={2}>
+          Place the correct accidentals for D Major key signature
+        </Text>
+        <Text fontSize="sm" fontStyle="italic" color="gray.600">
+          Hint: D Major has 2 sharps - F♯ and C♯
+        </Text>
+      </Box>
 
       {/* Controls */}
-      <div
-        style={{
-          marginBottom: "20px",
-          display: "flex",
-          gap: "20px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
+      <HStack wrap="wrap" gap={6} align="center">
         {/* Clef Selection */}
-        <div>
-          <label style={{ marginRight: "10px" }}>Clef:</label>
-          <select
-            value={currentClef}
-            onChange={(e) =>
-              setCurrentClef(e.target.value as "treble" | "bass")
+        <HStack>
+          <Text fontWeight="medium">Clef:</Text>
+          <Select.Root
+            value={[currentClef]}
+            collection={clefCollection}
+            onValueChange={(e) =>
+              setCurrentClef(e.value[0] as "treble" | "bass")
             }
-            style={{ padding: "5px" }}
             disabled={isSubmitted}
+            width="140px"
+            size="md"
           >
-            <option value="treble">Treble</option>
-            <option value="bass">Bass</option>
-          </select>
-        </div>
+            <Select.Trigger>
+              <Select.ValueText placeholder="Select clef" />
+            </Select.Trigger>
+            <Select.Content>
+              {clefCollection.items.map((item) => (
+                <Select.Item key={item.value} item={item}>
+                  {item.label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </HStack>
 
         {/* Accidental Selection */}
-        <div>
-          <label style={{ marginRight: "10px" }}>Accidental:</label>
-          <button
-            onClick={() => setSelectedAccidental("#")}
-            disabled={isSubmitted}
-            style={{
-              padding: "5px 10px",
-              margin: "0 2px",
-              backgroundColor:
+        <HStack>
+          <Text fontWeight="medium">Accidental:</Text>
+          <HStack gap={1}>
+            <Button
+              onClick={() => setSelectedAccidental("#")}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
                 selectedAccidental === "#" && !eraseMode && !isSubmitted
-                  ? "#007bff"
-                  : "#f8f9fa",
-              color:
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
                 selectedAccidental === "#" && !eraseMode && !isSubmitted
-                  ? "white"
-                  : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1,
-            }}
-          >
-            ♯ Sharp
-          </button>
-          <button
-            onClick={() => setSelectedAccidental("b")}
-            disabled={isSubmitted}
-            style={{
-              padding: "5px 10px",
-              margin: "0 2px",
-              backgroundColor:
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              ♯ Sharp
+            </Button>
+            <Button
+              onClick={() => setSelectedAccidental("b")}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
                 selectedAccidental === "b" && !eraseMode && !isSubmitted
-                  ? "#007bff"
-                  : "#f8f9fa",
-              color:
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
                 selectedAccidental === "b" && !eraseMode && !isSubmitted
-                  ? "white"
-                  : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1,
-            }}
-          >
-            ♭ Flat
-          </button>
-        </div>
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              ♭ Flat
+            </Button>
+          </HStack>
+        </HStack>
 
         {/* Erase Mode */}
         {!isSubmitted && (
-          <div>
-            <button
-              onClick={() => {
-                setEraseMode(!eraseMode);
-                if (!eraseMode) setSelectedAccidental(null);
-              }}
-              style={{
-                padding: "5px 15px",
-                backgroundColor: eraseMode ? "#dc3545" : "#f8f9fa",
-                color: eraseMode ? "white" : "black",
-                border: "1px solid #ccc",
-                fontWeight: eraseMode ? "bold" : "normal",
-              }}
-            >
-              {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
-            </button>
-          </div>
+          <Button
+            onClick={() => {
+              setEraseMode(!eraseMode);
+              if (!eraseMode) setSelectedAccidental(null);
+            }}
+            variant={eraseMode ? "solid" : "outline"}
+            colorScheme={eraseMode ? "red" : "gray"}
+            size="sm"
+            fontWeight={eraseMode ? "bold" : "normal"}
+          >
+            {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
+          </Button>
         )}
 
         {/* Submit/Reset Button */}
-        <div>
+        <Box ml="auto">
           {!isSubmitted ? (
-            <button
+            <Button
               onClick={gradeKeySignature}
               disabled={placedAccidentals.length === 0}
-              style={{
-                padding: "8px 20px",
-                backgroundColor:
-                  placedAccidentals.length > 0 ? "#28a745" : "#f8f9fa",
-                color: placedAccidentals.length > 0 ? "white" : "black",
-                border: "1px solid #ccc",
-                fontWeight: "bold",
-                opacity: placedAccidentals.length === 0 ? 0.5 : 1,
-              }}
+              colorScheme="green"
+              size="md"
+              fontWeight="bold"
             >
               Submit Key Signature ({placedAccidentals.length}/{MAX_ACCIDENTALS}
               )
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={resetExercise}
-              style={{
-                padding: "8px 20px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "1px solid #007bff",
-                fontWeight: "bold",
-              }}
+              colorScheme="blue"
+              size="md"
+              fontWeight="bold"
             >
               Try Again
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
+        </Box>
+      </HStack>
 
-      <p>
+      <Text
+        color={eraseMode ? "red.600" : "gray.700"}
+        fontWeight={eraseMode ? "bold" : "normal"}
+      >
         {isSubmitted
           ? "Exercise submitted - view results below"
           : eraseMode
@@ -480,101 +506,105 @@ export default function KeySignatureExercise() {
           : placedAccidentals.length >= MAX_ACCIDENTALS
           ? "Maximum accidentals reached - click Submit to grade"
           : `Click on the staff to place accidentals (${placedAccidentals.length}/${MAX_ACCIDENTALS})`}
-      </p>
+      </Text>
 
-      <svg
-        ref={svgRef}
-        width={600}
-        height={200}
-        onClick={handleStaffClick}
-        style={{
-          cursor: "pointer",
-          border: "1px solid #ccc",
-          transform: "scale(1.5)",
-          transformOrigin: "top left",
-          marginBottom: "20px",
-        }}
-      />
-
-      <div style={{ marginTop: "100px" }}>
-        {/* Grading Results */}
-        {isSubmitted && gradeResult && (
-          <div
-            style={{
-              padding: "20px",
-              border: "2px solid #ccc",
-              borderRadius: "8px",
-              backgroundColor: gradeResult.score >= 70 ? "#d4edda" : "#f8d7da",
-              marginBottom: "20px",
-            }}
-          >
-            <h4>Key Signature Exercise Results</h4>
-            <p
-              style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}
-            >
-              Score: {gradeResult.score}%
-              {gradeResult.score >= 90
-                ? " 🎉 Perfect!"
-                : gradeResult.score >= 70
-                ? " 👍 Good!"
-                : " 📚 Keep practicing!"}
-            </p>
-
-            {gradeResult.correct.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "green" }}>
-                  ✓ Correct accidentals placed
-                </strong>
-              </div>
-            )}
-
-            {gradeResult.incorrect.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "red" }}>
-                  ✗ Incorrect accidentals placed
-                </strong>
-              </div>
-            )}
-
-            {gradeResult.missing.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "orange" }}>
-                  ⚠ Missing required accidentals
-                </strong>
-              </div>
-            )}
-
-            <div style={{ marginTop: "15px", fontSize: "14px", color: "#666" }}>
-              <strong>D Major Key Signature:</strong> F♯ and C♯ (2 sharps)
-            </div>
-          </div>
-        )}
-
-        {/* Current Accidentals Display */}
-        {!isSubmitted && (
-          <div>
-            <p>
-              Current accidentals: {placedAccidentals.length}/{MAX_ACCIDENTALS}
-            </p>
-            <div>
-              {placedAccidentals.map((accidental, index) => (
-                <div key={index}>
-                  {index + 1}. {accidental.note.toUpperCase()}
-                  {accidental.type === "#" ? "♯" : "♭"}
-                </div>
-              ))}
-            </div>
-            {placedAccidentals.length > 0 && (
-              <button
-                onClick={() => setPlacedAccidentals([])}
-                style={{ marginTop: "10px", padding: "10px 20px" }}
-              >
-                Clear All Accidentals
-              </button>
-            )}
-          </div>
-        )}
+      <div style={{ marginBottom: "100px" }}>
+        <div
+          ref={containerRef}
+          onClick={handleStaffClick}
+          className="vexflow-container"
+          style={{
+            cursor: "pointer",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            transform: "scale(1.5)",
+            transformOrigin: "top left",
+            width: "600px",
+            height: "200px",
+          }}
+        />
       </div>
-    </div>
+
+      {/* Grading Results */}
+      {isSubmitted && gradeResult && (
+        <Card.Root
+          bg={gradeResult.score >= 70 ? "green.50" : "red.50"}
+          borderWidth="2px"
+          borderColor={gradeResult.score >= 70 ? "green.200" : "red.200"}
+        >
+          <Card.Body>
+            <VStack align="stretch" gap={4}>
+              <Heading size="md">Key Signature Exercise Results</Heading>
+              <Text fontSize="2xl" fontWeight="bold">
+                Score: {gradeResult.score}%
+                {gradeResult.score >= 90
+                  ? " 🎉 Perfect!"
+                  : gradeResult.score >= 70
+                  ? " 👍 Good!"
+                  : " 📚 Keep practicing!"}
+              </Text>
+
+              {gradeResult.correct.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="green.700">
+                    ✓ Correct accidentals placed
+                  </Text>
+                </Box>
+              )}
+
+              {gradeResult.incorrect.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="red.700">
+                    ✗ Incorrect accidentals placed
+                  </Text>
+                </Box>
+              )}
+
+              {gradeResult.missing.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="orange.700">
+                    ⚠ Missing required accidentals
+                  </Text>
+                </Box>
+              )}
+
+              <Box pt={3} borderTopWidth="1px" borderColor="gray.200">
+                <Text fontSize="sm" color="gray.600">
+                  <strong>D Major Key Signature:</strong> F♯ and C♯ (2 sharps)
+                </Text>
+              </Box>
+            </VStack>
+          </Card.Body>
+        </Card.Root>
+      )}
+
+      {/* Current Accidentals Display */}
+      {!isSubmitted && (
+        <Box>
+          <Text fontWeight="bold" mb={2}>
+            Current accidentals: {placedAccidentals.length}/{MAX_ACCIDENTALS}
+          </Text>
+          <VStack align="start" gap={1}>
+            {placedAccidentals.map((accidental, index) => (
+              <Text key={index} fontSize="sm">
+                {index + 1}. {accidental.note.toUpperCase()}
+                {accidental.type === "#" ? "♯" : "♭"}
+              </Text>
+            ))}
+          </VStack>
+          {placedAccidentals.length > 0 && (
+            <Button
+              onClick={() => setPlacedAccidentals([])}
+              mt={3}
+              size="sm"
+              variant="outline"
+              colorScheme="red"
+            >
+              Clear All Accidentals
+            </Button>
+          )}
+        </Box>
+      )}
+    </VStack>
   );
 }

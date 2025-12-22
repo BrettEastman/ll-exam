@@ -1,3 +1,5 @@
+import { Box, Button, HStack, Text, Circle } from '@chakra-ui/react';
+
 interface ExamNavigationProps {
   currentPage: number;
   totalPages: number;
@@ -17,85 +19,65 @@ export default function ExamNavigation({
   const isLastPage = currentPage === totalPages;
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '20px',
-      borderTop: '2px solid #eee',
-      backgroundColor: '#f8f9fa'
-    }}>
-      {/* Previous Button */}
-      <button
-        onClick={onPrevious}
-        disabled={isFirstPage}
-        style={{
-          padding: '12px 24px',
-          fontSize: '16px',
-          backgroundColor: isFirstPage ? '#f8f9fa' : '#6c757d',
-          color: isFirstPage ? '#999' : 'white',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          cursor: isFirstPage ? 'not-allowed' : 'pointer',
-          opacity: isFirstPage ? 0.5 : 1
-        }}
-      >
-        ← Previous
-      </button>
-
-      {/* Progress Indicator */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {Array.from({ length: totalPages }, (_, i) => (
-          <div
-            key={i + 1}
-            style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              backgroundColor: i + 1 === currentPage ? '#007bff' : 
-                              i + 1 < currentPage ? '#28a745' : '#dee2e6',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
-        <span style={{ marginLeft: '10px', color: '#666' }}>
-          {currentPage} of {totalPages}
-        </span>
-      </div>
-
-      {/* Next/Finish Button */}
-      {isLastPage ? (
-        <button
-          onClick={onFinish}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: '1px solid #28a745',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
+    <Box
+      borderTopWidth="2px"
+      borderColor="gray.200"
+      bg="gray.50"
+      p={5}
+    >
+      <HStack justify="space-between" align="center">
+        {/* Previous Button */}
+        <Button
+          onClick={onPrevious}
+          disabled={isFirstPage}
+          variant="outline"
+          colorScheme="gray"
+          size="lg"
         >
-          Finish Exam ✓
-        </button>
-      ) : (
-        <button
-          onClick={onNext}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: '1px solid #007bff',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Next →
-        </button>
-      )}
-    </div>
+          ← Previous
+        </Button>
+
+        {/* Progress Indicator */}
+        <HStack gap={3} align="center">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <Circle
+              key={i + 1}
+              size="3"
+              bg={
+                i + 1 === currentPage
+                  ? 'blue.500'
+                  : i + 1 < currentPage
+                  ? 'green.500'
+                  : 'gray.300'
+              }
+              transition="all 0.3s"
+            />
+          ))}
+          <Text ml={2} color="gray.600">
+            {currentPage} of {totalPages}
+          </Text>
+        </HStack>
+
+        {/* Next/Finish Button */}
+        {isLastPage ? (
+          <Button
+            onClick={onFinish}
+            colorScheme="green"
+            size="lg"
+            fontWeight="bold"
+          >
+            Finish Exam ✓
+          </Button>
+        ) : (
+          <Button
+            onClick={onNext}
+            colorScheme="blue"
+            size="lg"
+          >
+            Next →
+          </Button>
+        )}
+      </HStack>
+    </Box>
   );
 }

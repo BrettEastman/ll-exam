@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Container, Box, Heading, Text, VStack, HStack, Separator } from '@chakra-ui/react';
 import ScaleExercise from '../../../components/exam/ScaleExercise';
 import KeySignatureExercise from '../../../components/exam/KeySignatureExercise';
 import ExamNavigation from '../../../components/exam/ExamNavigation';
@@ -13,7 +14,7 @@ const EXAM_PAGES = [
     description: "Enter the D Major scale notes in order"
   },
   {
-    id: 2, 
+    id: 2,
     title: "Key Signature Notation",
     description: "Place the correct sharps or flats for the key signature"
   }
@@ -24,7 +25,7 @@ export default function ExamPage() {
   const router = useRouter();
   const currentPage = parseInt(params.page as string);
   const [examStartTime] = useState(Date.now());
-  
+
   // Redirect invalid pages
   useEffect(() => {
     if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_PAGES.length) {
@@ -33,7 +34,11 @@ export default function ExamPage() {
   }, [currentPage, router]);
 
   if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_PAGES.length) {
-    return <div>Loading...</div>;
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Text>Loading...</Text>
+      </Container>
+    );
   }
 
   const currentExam = EXAM_PAGES[currentPage - 1];
@@ -56,33 +61,37 @@ export default function ExamPage() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '20px', borderBottom: '2px solid #eee', paddingBottom: '20px' }}>
-        <h1>LydianLab Music Theory Exam</h1>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>{currentExam.title}</h2>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            Page {currentPage} of {EXAM_PAGES.length}
-          </div>
-        </div>
-        <p style={{ color: '#666', margin: '10px 0' }}>{currentExam.description}</p>
-      </div>
+    <Container maxW="container.xl" py={8} px={6}>
+      <VStack gap={6} align="stretch">
+        {/* Header */}
+        <Box borderBottomWidth="2px" borderColor="gray.200" pb={5}>
+          <VStack align="stretch" gap={3}>
+            <Heading size="xl">LydianLab Music Theory Exam</Heading>
+            <HStack justify="space-between" align="center">
+              <Heading size="lg">{currentExam.title}</Heading>
+              <Text fontSize="sm" color="gray.600">
+                Page {currentPage} of {EXAM_PAGES.length}
+              </Text>
+            </HStack>
+            <Text color="gray.600">{currentExam.description}</Text>
+          </VStack>
+        </Box>
 
-      {/* Current Exercise */}
-      <div style={{ marginBottom: '40px' }}>
-        {currentPage === 1 && <ScaleExercise />}
-        {currentPage === 2 && <KeySignatureExercise />}
-      </div>
+        {/* Current Exercise */}
+        <Box>
+          {currentPage === 1 && <ScaleExercise />}
+          {currentPage === 2 && <KeySignatureExercise />}
+        </Box>
 
-      {/* Navigation */}
-      <ExamNavigation
-        currentPage={currentPage}
-        totalPages={EXAM_PAGES.length}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-        onFinish={handleFinish}
-      />
-    </div>
+        {/* Navigation */}
+        <ExamNavigation
+          currentPage={currentPage}
+          totalPages={EXAM_PAGES.length}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onFinish={handleFinish}
+        />
+      </VStack>
+    </Container>
   );
 }

@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Renderer, Stave, StaveNote, TickContext, Accidental } from "vexflow";
+import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
+import {
+  Box,
+  Text,
+  Button,
+  HStack,
+  VStack,
+  Select,
+  Card,
+  Heading,
+  createListCollection,
+} from "@chakra-ui/react";
 
 interface StaffNotationProps {
   width?: number;
@@ -22,7 +34,7 @@ const D_MAJOR_SCALE = [
   { note: "g", accidental: null },
   { note: "a", accidental: null },
   { note: "b", accidental: null },
-  { note: "c", accidental: "#" }
+  { note: "c", accidental: "#" },
 ];
 
 const MAX_NOTES = 7;
@@ -32,63 +44,95 @@ export default function StaffNotation({
   height = 200,
   clef: initialClef = "treble",
 }: StaffNotationProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>([]);
-  const [currentClef, setCurrentClef] = useState<"treble" | "bass">(initialClef);
-  const [selectedAccidental, setSelectedAccidental] = useState<string | null>(null);
+  const [currentClef, setCurrentClef] = useState<"treble" | "bass">(
+    initialClef
+  );
+  const [selectedAccidental, setSelectedAccidental] = useState<string | null>(
+    null
+  );
   const [eraseMode, setEraseMode] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [gradeResult, setGradeResult] = useState<any>(null);
 
+  const clefCollection = useMemo(
+    () =>
+      createListCollection({
+        items: [
+          { value: "treble", label: "Treble" },
+          { value: "bass", label: "Bass" },
+        ],
+      }),
+    []
+  );
+
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!containerRef.current) return;
 
-    // Clear previous content
-    svgRef.current.innerHTML = "";
-
-    // Create VexFlow renderer
-    const renderer = new Renderer(svgRef.current, Renderer.Backends.SVG);
-    renderer.resize(width, height);
-    const context = renderer.getContext();
-
-    // Create a stave
-    const stave = new Stave(10, 40, width - 20);
-    stave.addClef(currentClef);
-    stave.setContext(context).draw();
-
-    // If there are placed notes, render them individually
-    if (placedNotes.length > 0) {
+    // Load VexFlow fonts before rendering
+    const loadAndRender = async () => {
       try {
-        // Draw notes one by one without using TickContext (simpler approach)
-        placedNotes.forEach((note, index) => {
-          const noteString = getNoteName(note.line, currentClef);
-          const vfNote = new StaveNote({
-            clef: currentClef,
-            keys: [noteString],
-            duration: "q",
-          });
+        // Ensure fonts are loaded (only loads once globally)
+        await ensureVexFlowFonts();
 
-          if (note.accidental) {
-            const accidental = new Accidental(note.accidental);
-            vfNote.addModifier(accidental, 0);
+        // Clear previous content
+        containerRef.current!.innerHTML = "";
+
+        // Create VexFlow renderer using SVG backend
+        const renderer = new Renderer(
+          containerRef.current!,
+          Renderer.Backends.SVG
+        );
+        renderer.resize(width, height);
+        const context = renderer.getContext();
+
+        // Create a stave
+        const stave = new Stave(10, 40, width - 20);
+        stave.addClef(currentClef);
+        stave.setContext(context).draw();
+
+        // If there are placed notes, render them individually
+        if (placedNotes.length > 0) {
+          try {
+            // Draw notes one by one
+            placedNotes.forEach((note, index) => {
+              const noteString = getNoteName(note.line, currentClef);
+              const vfNote = new StaveNote({
+                clef: currentClef,
+                keys: [noteString],
+                duration: "q",
+              });
+
+              if (note.accidental) {
+                const accidental = new Accidental(note.accidental);
+                vfNote.addModifier(accidental, 0);
+              }
+
+              // Set position and render
+              const noteX = 40 + index * 45; // Start closer to clef, space 45px apart
+              vfNote.setStave(stave);
+              vfNote.setContext(context);
+
+              // Create individual tick context for each note
+              const tickContext = new TickContext();
+              tickContext.addTickable(vfNote);
+              tickContext.preFormat().setX(noteX);
+
+              vfNote.draw();
+            });
+          } catch (error) {
+            console.error("Error rendering notes:", error);
           }
-
-          // Set position and render
-          const noteX = 50 + index * 50; // Start at 50, space 50px apart
-          vfNote.setStave(stave);
-          vfNote.setContext(context);
-
-          // Create individual tick context for each note
-          const tickContext = new TickContext();
-          tickContext.addTickable(vfNote);
-          tickContext.preFormat().setX(noteX);
-
-          vfNote.draw();
-        });
+        }
       } catch (error) {
-        console.error("Error rendering notes:", error);
+        console.error("Error loading VexFlow fonts:", error);
       }
-    }
+    };
+
+    loadAndRender();
+
+    loadAndRender();
   }, [placedNotes, width, height, currentClef]);
 
   // Convert staff line position to note name
@@ -150,10 +194,14 @@ export default function StaffNotation({
     return Math.max(0, Math.min(12, line)); // Clamp to valid range
   };
 
-  const handleStaffClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const handleStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
 
+    // Get the SVG that VexFlow created inside the container
+    const svg = containerRef.current.querySelector("svg");
+    if (!svg) return;
+
+    const rect = svg.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     const line = getStaffLine(y);
@@ -178,36 +226,42 @@ export default function StaffNotation({
       if (placedNotes.length > 0) {
         let closestIndex = 0;
         let closestDistance = Infinity;
-        
+
         placedNotes.forEach((note, index) => {
           // Calculate distance between click and note position
-          const noteX = 50 + (index * 50); // Same positioning logic as rendering
-          const noteY = 76.67 + (note.line * 5); // Convert line to Y position (same as getStaffLine logic)
+          const noteX = 40 + index * 45; // Same positioning logic as rendering
+          const noteY = 76.67 + note.line * 5; // Convert line to Y position (same as getStaffLine logic)
           const clickX = x / 1.5; // Convert click coordinates
           const clickY = y / 1.5;
-          
+
           const distance = Math.sqrt(
             Math.pow(clickX - noteX, 2) + Math.pow(clickY - noteY, 2)
           );
-          
+
           if (distance < closestDistance) {
             closestDistance = distance;
             closestIndex = index;
           }
         });
-        
+
         // Remove the closest note (with reasonable distance threshold)
-        if (closestDistance < 100) { // 100px threshold
-          setPlacedNotes((prev) => prev.filter((_, index) => index !== closestIndex));
+        if (closestDistance < 100) {
+          // 100px threshold
+          setPlacedNotes((prev) =>
+            prev.filter((_, index) => index !== closestIndex)
+          );
         }
       }
     } else {
       // Add a new note with selected accidental (if under limit and not submitted)
       if (placedNotes.length < MAX_NOTES && !isSubmitted) {
-        setPlacedNotes((prev) => [...prev, { 
-          line, 
-          accidental: selectedAccidental || undefined 
-        }]);
+        setPlacedNotes((prev) => [
+          ...prev,
+          {
+            line,
+            accidental: selectedAccidental || undefined,
+          },
+        ]);
       }
     }
   };
@@ -215,23 +269,23 @@ export default function StaffNotation({
   // Convert a placed note to a comparable format (octave-agnostic)
   const noteToString = (note: PlacedNote): string => {
     const noteName = getNoteName(note.line, currentClef);
-    const [noteOnly, octave] = noteName.split('/');
-    const accidental = note.accidental || '';
+    const [noteOnly, octave] = noteName.split("/");
+    const accidental = note.accidental || "";
     return `${noteOnly}${accidental}`; // Remove octave from comparison
   };
 
   // Grade the student's scale entry
   const gradeScale = () => {
     const studentNotes = placedNotes.map(noteToString);
-    const correctScale = D_MAJOR_SCALE.map(note => 
-      `${note.note}${note.accidental || ''}` // Remove octave from correct scale too
+    const correctScale = D_MAJOR_SCALE.map(
+      (note) => `${note.note}${note.accidental || ""}` // Remove octave from correct scale too
     );
 
     const results = {
       correct: [] as string[],
       incorrect: [] as string[],
       missing: [] as string[],
-      score: 0
+      score: 0,
     };
 
     // Check each student note
@@ -250,8 +304,10 @@ export default function StaffNotation({
       }
     });
 
-    results.score = Math.round((results.correct.length / correctScale.length) * 100);
-    
+    results.score = Math.round(
+      (results.correct.length / correctScale.length) * 100
+    );
+
     setGradeResult(results);
     setIsSubmitted(true);
   };
@@ -266,228 +322,291 @@ export default function StaffNotation({
   };
 
   return (
-    <div>
-      <h3>D Major Scale Exercise</h3>
-      <p><strong>Instructions:</strong> Enter the D Major scale notes in order: D, E, F♯, G, A, B, C♯</p>
-      <p><em>Note: You can place the notes in any octave - only the note names and accidentals matter!</em></p>
-      
+    <VStack align="stretch" gap={6}>
+      <Box>
+        <Text fontWeight="bold" mb={2}>
+          Instructions:
+        </Text>
+        <Text mb={2}>
+          Enter the D Major scale notes in order: D, E, F♯, G, A, B, C♯
+        </Text>
+        <Text fontSize="sm" fontStyle="italic" color="gray.600">
+          Note: You can place the notes in any octave - only the note names and
+          accidentals matter!
+        </Text>
+      </Box>
+
       {/* Controls */}
-      <div style={{ marginBottom: "20px", display: "flex", gap: "20px", alignItems: "center" }}>
+      <HStack wrap="wrap" gap={6} align="center">
         {/* Clef Selection */}
-        <div>
-          <label style={{ marginRight: "10px" }}>Clef:</label>
-          <select 
-            value={currentClef} 
-            onChange={(e) => setCurrentClef(e.target.value as "treble" | "bass")}
-            style={{ padding: "5px" }}
+        <HStack>
+          <Text fontWeight="medium">Clef:</Text>
+          <Select.Root
+            value={[currentClef]}
+            collection={clefCollection}
+            onValueChange={(e) =>
+              setCurrentClef(e.value[0] as "treble" | "bass")
+            }
             disabled={isSubmitted}
+            width="140px"
+            size="md"
           >
-            <option value="treble">Treble</option>
-            <option value="bass">Bass</option>
-          </select>
-        </div>
-        
+            <Select.Trigger>
+              <Select.ValueText placeholder="Select clef" />
+            </Select.Trigger>
+            <Select.Content>
+              {clefCollection.items.map((item) => (
+                <Select.Item key={item.value} item={item}>
+                  {item.label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </HStack>
+
         {/* Accidental Selection */}
-        <div>
-          <label style={{ marginRight: "10px" }}>Accidental:</label>
-          <button 
-            onClick={() => setSelectedAccidental(null)}
-            disabled={isSubmitted}
-            style={{ 
-              padding: "5px 10px", 
-              margin: "0 2px",
-              backgroundColor: selectedAccidental === null && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === null && !eraseMode && !isSubmitted ? "white" : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1
-            }}
-          >
-            None
-          </button>
-          <button 
-            onClick={() => setSelectedAccidental("#")}
-            disabled={isSubmitted}
-            style={{ 
-              padding: "5px 10px", 
-              margin: "0 2px",
-              backgroundColor: selectedAccidental === "#" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "#" && !eraseMode && !isSubmitted ? "white" : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1
-            }}
-          >
-            ♯ Sharp
-          </button>
-          <button 
-            onClick={() => setSelectedAccidental("b")}
-            disabled={isSubmitted}
-            style={{ 
-              padding: "5px 10px", 
-              margin: "0 2px",
-              backgroundColor: selectedAccidental === "b" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "b" && !eraseMode && !isSubmitted ? "white" : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1
-            }}
-          >
-            ♭ Flat
-          </button>
-          <button 
-            onClick={() => setSelectedAccidental("n")}
-            disabled={isSubmitted}
-            style={{ 
-              padding: "5px 10px", 
-              margin: "0 2px",
-              backgroundColor: selectedAccidental === "n" && !eraseMode && !isSubmitted ? "#007bff" : "#f8f9fa",
-              color: selectedAccidental === "n" && !eraseMode && !isSubmitted ? "white" : "black",
-              border: "1px solid #ccc",
-              opacity: isSubmitted ? 0.5 : 1
-            }}
-          >
-            ♮ Natural
-          </button>
-        </div>
-        
+        <HStack>
+          <Text fontWeight="medium">Accidental:</Text>
+          <HStack gap={1}>
+            <Button
+              onClick={() => setSelectedAccidental(null)}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
+                selectedAccidental === null && !eraseMode && !isSubmitted
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
+                selectedAccidental === null && !eraseMode && !isSubmitted
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              None
+            </Button>
+            <Button
+              onClick={() => setSelectedAccidental("#")}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
+                selectedAccidental === "#" && !eraseMode && !isSubmitted
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
+                selectedAccidental === "#" && !eraseMode && !isSubmitted
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              ♯ Sharp
+            </Button>
+            <Button
+              onClick={() => setSelectedAccidental("b")}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
+                selectedAccidental === "b" && !eraseMode && !isSubmitted
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
+                selectedAccidental === "b" && !eraseMode && !isSubmitted
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              ♭ Flat
+            </Button>
+            <Button
+              onClick={() => setSelectedAccidental("n")}
+              disabled={isSubmitted}
+              size="sm"
+              variant={
+                selectedAccidental === "n" && !eraseMode && !isSubmitted
+                  ? "solid"
+                  : "outline"
+              }
+              colorScheme={
+                selectedAccidental === "n" && !eraseMode && !isSubmitted
+                  ? "blue"
+                  : "gray"
+              }
+            >
+              ♮ Natural
+            </Button>
+          </HStack>
+        </HStack>
+
         {/* Erase Mode */}
         {!isSubmitted && (
-          <div>
-            <button 
-              onClick={() => {
-                setEraseMode(!eraseMode);
-                if (!eraseMode) setSelectedAccidental(null); // Clear accidental when entering erase mode
-              }}
-              style={{ 
-                padding: "5px 15px",
-                backgroundColor: eraseMode ? "#dc3545" : "#f8f9fa",
-                color: eraseMode ? "white" : "black",
-                border: "1px solid #ccc",
-                fontWeight: eraseMode ? "bold" : "normal"
-              }}
-            >
-              {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
-            </button>
-          </div>
-        )}
-        
-        {/* Submit/Reset Buttons */}
-        <div>
-          {!isSubmitted ? (
-            <button 
-              onClick={gradeScale}
-              disabled={placedNotes.length === 0}
-              style={{ 
-                padding: "8px 20px",
-                backgroundColor: placedNotes.length > 0 ? "#28a745" : "#f8f9fa",
-                color: placedNotes.length > 0 ? "white" : "black",
-                border: "1px solid #ccc",
-                fontWeight: "bold",
-                opacity: placedNotes.length === 0 ? 0.5 : 1
-              }}
-            >
-              Submit Scale ({placedNotes.length}/{MAX_NOTES})
-            </button>
-          ) : (
-            <button 
-              onClick={resetExercise}
-              style={{ 
-                padding: "8px 20px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "1px solid #007bff",
-                fontWeight: "bold"
-              }}
-            >
-              Try Again
-            </button>
-          )}
-        </div>
-      </div>
-      
-      <p>
-        {isSubmitted 
-          ? "Exercise submitted - view results below" 
-          : eraseMode 
-          ? "🗑️ ERASE MODE: Click on notes to remove them" 
-          : placedNotes.length >= MAX_NOTES 
-          ? "Maximum 7 notes reached - click Submit to grade your scale" 
-          : `Click on the staff to place notes (${placedNotes.length}/${MAX_NOTES})`}
-      </p>
-      
-      <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        onClick={handleStaffClick}
-        style={{
-          cursor: "pointer",
-          border: "1px solid #ccc",
-          transform: "scale(1.5)",
-          transformOrigin: "top left",
-          marginBottom: "20px",
-        }}
-      />
-      
-      <div style={{ marginTop: "100px" }}>
-        {/* Grading Results */}
-        {isSubmitted && gradeResult && (
-          <div style={{ 
-            padding: "20px", 
-            border: "2px solid #ccc", 
-            borderRadius: "8px",
-            backgroundColor: gradeResult.score >= 70 ? "#d4edda" : "#f8d7da",
-            marginBottom: "20px"
-          }}>
-            <h4>Scale Exercise Results</h4>
-            <p style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}>
-              Score: {gradeResult.score}% 
-              {gradeResult.score >= 90 ? " 🎉 Excellent!" : 
-               gradeResult.score >= 70 ? " 👍 Good!" : " 📚 Keep practicing!"}
-            </p>
-            
-            {gradeResult.correct.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "green" }}>✓ Correct notes:</strong> {gradeResult.correct.join(", ")}
-              </div>
-            )}
-            
-            {gradeResult.incorrect.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "red" }}>✗ Incorrect notes:</strong> {gradeResult.incorrect.join(", ")}
-              </div>
-            )}
-            
-            {gradeResult.missing.length > 0 && (
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "orange" }}>⚠ Missing notes:</strong> {gradeResult.missing.join(", ")}
-              </div>
-            )}
-            
-            <div style={{ marginTop: "15px", fontSize: "14px", color: "#666" }}>
-              <strong>Correct D Major Scale:</strong> D, E, F♯, G, A, B, C♯ (any octave)
-            </div>
-          </div>
+          <Button
+            onClick={() => {
+              setEraseMode(!eraseMode);
+              if (!eraseMode) setSelectedAccidental(null);
+            }}
+            variant={eraseMode ? "solid" : "outline"}
+            colorScheme={eraseMode ? "red" : "gray"}
+            size="sm"
+            fontWeight={eraseMode ? "bold" : "normal"}
+          >
+            {eraseMode ? "🗑️ ERASE MODE" : "🗑️ Erase"}
+          </Button>
         )}
 
-        {/* Current Notes Display */}
-        {!isSubmitted && (
-          <div>
-            <p>Current notes: {placedNotes.length}/{MAX_NOTES}</p>
-            <div>
-              {placedNotes.map((note, index) => (
-                <div key={index}>
-                  {index + 1}. {getNoteName(note.line, currentClef)}
-                  {note.accidental && ` (${note.accidental === '#' ? 'Sharp' : note.accidental === 'b' ? 'Flat' : 'Natural'})`}
-                </div>
-              ))}
-            </div>
-            {placedNotes.length > 0 && (
-              <button onClick={() => setPlacedNotes([])} style={{ marginTop: "10px", padding: "10px 20px" }}>
-                Clear All Notes
-              </button>
-            )}
-          </div>
-        )}
+        {/* Submit/Reset Buttons */}
+        <Box ml="auto">
+          {!isSubmitted ? (
+            <Button
+              onClick={gradeScale}
+              disabled={placedNotes.length === 0}
+              colorScheme="green"
+              size="md"
+              fontWeight="bold"
+            >
+              Submit Scale ({placedNotes.length}/{MAX_NOTES})
+            </Button>
+          ) : (
+            <Button
+              onClick={resetExercise}
+              colorScheme="blue"
+              size="md"
+              fontWeight="bold"
+            >
+              Try Again
+            </Button>
+          )}
+        </Box>
+      </HStack>
+
+      <Text
+        color={eraseMode ? "red.600" : "gray.700"}
+        fontWeight={eraseMode ? "bold" : "normal"}
+      >
+        {isSubmitted
+          ? "Exercise submitted - view results below"
+          : eraseMode
+          ? "🗑️ ERASE MODE: Click on notes to remove them"
+          : placedNotes.length >= MAX_NOTES
+          ? "Maximum 7 notes reached - click Submit to grade your scale"
+          : `Click on the staff to place notes (${placedNotes.length}/${MAX_NOTES})`}
+      </Text>
+
+      <div style={{ marginBottom: "100px" }}>
+        <div
+          ref={containerRef}
+          onClick={handleStaffClick}
+          className="vexflow-container"
+          style={{
+            cursor: "pointer",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            transform: "scale(1.5)",
+            transformOrigin: "top left",
+            width: `${width}px`,
+            height: `${height}px`,
+          }}
+        />
       </div>
-    </div>
+
+      {/* Grading Results */}
+      {isSubmitted && gradeResult && (
+        <Card.Root
+          bg={gradeResult.score >= 70 ? "green.50" : "red.50"}
+          borderWidth="2px"
+          borderColor={gradeResult.score >= 70 ? "green.200" : "red.200"}
+        >
+          <Card.Body>
+            <VStack align="stretch" gap={4}>
+              <Heading size="md">Scale Exercise Results</Heading>
+              <Text fontSize="2xl" fontWeight="bold">
+                Score: {gradeResult.score}%
+                {gradeResult.score >= 90
+                  ? " 🎉 Excellent!"
+                  : gradeResult.score >= 70
+                  ? " 👍 Good!"
+                  : " 📚 Keep practicing!"}
+              </Text>
+
+              {gradeResult.correct.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="green.700">
+                    ✓ Correct notes:
+                  </Text>
+                  <Text color="green.700">
+                    {gradeResult.correct.join(", ")}
+                  </Text>
+                </Box>
+              )}
+
+              {gradeResult.incorrect.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="red.700">
+                    ✗ Incorrect notes:
+                  </Text>
+                  <Text color="red.700">
+                    {gradeResult.incorrect.join(", ")}
+                  </Text>
+                </Box>
+              )}
+
+              {gradeResult.missing.length > 0 && (
+                <Box>
+                  <Text fontWeight="bold" color="orange.700">
+                    ⚠ Missing notes:
+                  </Text>
+                  <Text color="orange.700">
+                    {gradeResult.missing.join(", ")}
+                  </Text>
+                </Box>
+              )}
+
+              <Box pt={3} borderTopWidth="1px" borderColor="gray.200">
+                <Text fontSize="sm" color="gray.600">
+                  <strong>Correct D Major Scale:</strong> D, E, F♯, G, A, B, C♯
+                  (any octave)
+                </Text>
+              </Box>
+            </VStack>
+          </Card.Body>
+        </Card.Root>
+      )}
+
+      {/* Current Notes Display */}
+      {!isSubmitted && (
+        <Box>
+          <Text fontWeight="bold" mb={2}>
+            Current notes: {placedNotes.length}/{MAX_NOTES}
+          </Text>
+          <VStack align="start" gap={1}>
+            {placedNotes.map((note, index) => (
+              <Text key={index} fontSize="sm">
+                {index + 1}. {getNoteName(note.line, currentClef)}
+                {note.accidental &&
+                  ` (${
+                    note.accidental === "#"
+                      ? "Sharp"
+                      : note.accidental === "b"
+                      ? "Flat"
+                      : "Natural"
+                  })`}
+              </Text>
+            ))}
+          </VStack>
+          {placedNotes.length > 0 && (
+            <Button
+              onClick={() => setPlacedNotes([])}
+              mt={3}
+              size="sm"
+              variant="outline"
+              colorScheme="red"
+            >
+              Clear All Notes
+            </Button>
+          )}
+        </Box>
+      )}
+    </VStack>
   );
 }
