@@ -1,23 +1,30 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Container, Box, Heading, Text, VStack, HStack, Separator } from '@chakra-ui/react';
-import ScaleExercise from '../../../components/exam/ScaleExercise';
-import KeySignatureExercise from '../../../components/exam/KeySignatureExercise';
-import ExamNavigation from '../../../components/exam/ExamNavigation';
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Box,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+} from "@chakra-ui/react";
+import ScaleExercise from "../../../components/exam/ScaleExercise";
+import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
+import ExamNavigation from "../../../components/exam/ExamNavigation";
 
 const EXAM_PAGES = [
   {
     id: 1,
     title: "Scale Notation",
-    description: "Enter the D Major scale notes in order"
+    description: "Enter the D Major scale notes in order",
   },
   {
     id: 2,
     title: "Key Signature Notation",
-    description: "Place the correct sharps or flats for the key signature"
-  }
+    description: "Place the correct sharps or flats for the key signature",
+  },
 ];
 
 export default function ExamPage() {
@@ -28,12 +35,20 @@ export default function ExamPage() {
 
   // Redirect invalid pages
   useEffect(() => {
-    if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_PAGES.length) {
-      router.push('/exam/1');
+    if (
+      isNaN(currentPage) ||
+      currentPage < 1 ||
+      currentPage > EXAM_PAGES.length
+    ) {
+      router.push("/exam/1");
     }
   }, [currentPage, router]);
 
-  if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_PAGES.length) {
+  if (
+    isNaN(currentPage) ||
+    currentPage < 1 ||
+    currentPage > EXAM_PAGES.length
+  ) {
     return (
       <Container maxW="container.xl" py={8}>
         <Text>Loading...</Text>
@@ -57,7 +72,7 @@ export default function ExamPage() {
 
   const handleFinish = () => {
     // TODO: Handle exam completion
-    alert('Exam completed! (This would normally save results)');
+    alert("Exam completed! (This would normally save results)");
   };
 
   return (
@@ -66,7 +81,7 @@ export default function ExamPage() {
         {/* Header */}
         <Box borderBottomWidth="2px" borderColor="gray.200" pb={5}>
           <VStack align="stretch" gap={3}>
-            <Heading size="xl">LydianLab Music Theory Exam</Heading>
+            <Heading size="xl">Lydian Lab Music Theory Exam</Heading>
             <HStack justify="space-between" align="center">
               <Heading size="lg">{currentExam.title}</Heading>
               <Text fontSize="sm" color="gray.600">

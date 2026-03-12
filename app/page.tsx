@@ -11,7 +11,6 @@ import {
   Card,
   VStack,
   HStack,
-  Icon,
 } from "@chakra-ui/react";
 
 export default function Home() {
