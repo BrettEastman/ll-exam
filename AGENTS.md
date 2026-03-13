@@ -1,104 +1,86 @@
-# LydianLab Music Theory Exam
+# LydianLab Music Theory Exam - OpenCode Execution Guide
 
-## Project Overview
+## Mission
 
-Interactive web-based music theory entrance exam for a music camp, replacing traditional paper-based assessments. The application evaluates students across key areas of music theory to determine appropriate class placement.
+Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra UI, and a classy minimalist vanilla CSS design in light mode only.
 
-## Tech Stack
+## Rewrite Constraints
 
-- **Frontend**: Next.js 15 with React 19, TypeScript, Chakra UI
-- **Backend**: Firebase (Authentication, Firestore)
-- **Music Notation**: VexFlow library for interactive staff notation
-- **Styling**: Chakra UI component library
+- Use Next.js 15, React 19, TypeScript, and VexFlow 5.
+- Use native VexFlow API (`Renderer`, `Stave`, `StaveNote`, `Accidental`, `KeySignature`, `Formatter`) for interactive notation.
+- Do not introduce new UI frameworks. Styling must be vanilla CSS.
+- Light mode only. Do not add dark-mode media queries.
+- Keep notation legible and music-theory accurate across treble and bass clefs.
 
-## Project Structure
+## Architecture Targets
 
-```
-/app                    # Next.js routing
-/components             # Reusable UI components
-  /exam                # Exam-specific components
-  /notation           # VexFlow music notation components
-  /ui                 # General UI components
-/contexts              # React Context providers
-/lib                   # Utility functions and Firebase config
-/types                 # TypeScript type definitions
-/styles                # Global styles and theme
-```
+### Notation Engine Separation
 
-## Key Features & Architecture
+- `features/notation/model`: serializable state and domain types.
+- `features/notation/render`: pure draw pipeline from model -> SVG.
+- `features/notation/interaction`: click/keyboard handlers producing model updates.
+- `features/notation/grading`: pure grading functions with tests.
 
-### Exam Flow
+### App Features
 
-- **2 main sections, 2 pages total**
-- Page 1: Key Signature Notation
-- Page 2: Scale Notation (major/minor scales)
-- State-driven progression with view state management
-- 60-minute timer with automatic submission
+- Exam page 1: key signature notation.
+- Exam page 2: scale notation.
+- 60-minute timer with auto-submit.
+- Firebase auth and Firestore persistence.
 
-## Key Libraries & Documentation
+## Actionable Implementation Checklist
 
-- **VexFlow**: https://0xfe.github.io/vexflow/api/index.html
-  - Music notation rendering library
-  - Key concepts: Renderer, Context, Stave, Voice, Formatter
-  - Focus on StaveNote, Accidental, KeySignature classes
+### Phase 1 - Foundation Reset
 
-### Interactive Music Notation
+- [x] Add `AGENTS.md` as the OpenCode source of truth.
+- [x] Remove Chakra provider and Chakra dependencies from active app routes.
+- [x] Replace Chakra UI layout/components with semantic HTML + CSS classes.
+- [x] Create rewrite-oriented folder scaffolding under `features/` and `styles/`.
+- [ ] Ensure lint and typecheck run clean after shell migration. (blocked: package manager missing in runtime)
 
-- VexFlow integration for staff rendering
-- Click-based note placement/erasure
-- Sharp/flat accidentals with double-sharp/flat support
-- Real-time visual feedback
-- Clef preference selection (treble/bass)
+### Phase 2 - Vanilla CSS Design System (Classy Minimalist, Light-Only)
 
-### Authentication & Data
+- [x] Create `styles/tokens.css` with design tokens:
+  - [x] paper/ink palette, muted text, borders, accent colors.
+  - [x] spacing scale, radius scale, elevation scale.
+  - [ ] typography scale and line-height rules.
+- [x] Create `styles/base.css` for reset, typography, forms, buttons, focus styles.
+- [x] Create page/component CSS modules or grouped stylesheet files.
+- [x] Enforce `html { color-scheme: light; }` globally.
+- [ ] Verify mobile and desktop layouts for readability and spacing.
 
-- Firebase Authentication with email verification
-- Student registration/sign-in system
-- Firestore for persistent data storage
-- User preference management
+### Phase 3 - VexFlow Engine Rebuild
 
-### State Management
+- [ ] Implement render surface with SVG backend in a client component.
+- [ ] Move away from ad-hoc SVG text insertion for accidentals.
+- [ ] Implement deterministic click-to-position mapping per clef.
+- [ ] Support erase mode, accidental mode, and keyboard interaction.
+- [ ] Keep notation target size at ~1.5x VexFlow default.
 
-- React Context for global state (auth, timer, preferences)
-- Local component state for notation interactions
-- Firebase integration for data persistence
+### Phase 4 - Exam Flow Rebuild
 
-## Coding Conventions
+- [ ] Rebuild `/exam/[page]` state flow and route guards.
+- [ ] Add progress, navigation, and completion summary.
+- [ ] Add timer and auto-submit behavior.
+- [ ] Add save-and-resume support (local draft + Firestore sync).
 
-- Use TypeScript for all components and utilities
-- Functional components with hooks
-- Chakra UI for consistent styling
-- Context providers for shared state
-- Custom hooks for Firebase operations
+### Phase 5 - Auth + Persistence
 
-## Key Considerations
+- [ ] Rebuild Firebase auth flow (register/login/verification).
+- [ ] Define exam attempt schema in Firestore.
+- [ ] Validate and persist answers robustly.
+- [ ] Add error handling for offline and transient failures.
 
-- **Music Theory Accuracy**: Ensure proper music notation standards
-- **Accessibility**: Keyboard navigation for note placement
-- **Performance**: Optimize VexFlow rendering for smooth interactions
-- **Data Integrity**: Reliable Firebase integration for exam submissions
-- **User Experience**: Clear tutorials and progress indicators
+### Phase 6 - Quality Gates
 
-## Development Priorities
+- [ ] Unit tests for grading and notation model transforms.
+- [ ] Integration checks for full two-page exam flow.
+- [ ] Manual QA for treble/bass notation interactions.
+- [ ] Run `npm run lint` and `npm run build` before handoff.
 
-1. Core VexFlow notation system
-2. Firebase authentication flow
-3. Exam state management and timing
-4. Automated grading logic
-5. User interface polish and accessibility
+## Execution Notes For OpenCode Agents
 
-## Notes
-
-- Focus on music education UX - students may have varying tech comfort levels
-- Make sure music notation size is about 1.5 times the size of VexFlow's default
-- Ensure exam integrity with proper data validation
-- Consider offline scenarios and connection issues
-- Implement comprehensive error handling for Firebase operations
-
-## Agent Guidance
-
-- Use TypeScript and functional React patterns consistently.
-- Preserve Chakra UI patterns already used in this repository.
-- Treat music notation correctness as a primary acceptance criterion.
-- Prefer small, focused changes and verify affected flows after edits.
-- For notation work, validate behavior in both treble and bass clef modes.
+- Prefer small, focused commits and incremental verifiable changes.
+- Do not regress notation correctness while refactoring UI.
+- If a choice is unclear, preserve exam integrity over visual complexity.
+- Keep accessibility first-class: keyboard paths and visible focus states.

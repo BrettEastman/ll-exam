@@ -1,0 +1,75 @@
+.nav {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-paper-soft);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  padding: 0.55rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-accent-soft);
+  outline-offset: 2px;
+}
+
+.next,
+.finish {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: #fff;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.progress p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #d7d4cf;
+}
+
+.current {
+  background: var(--color-accent);
+}
+
+.complete {
+  background: #3f7c57;
+}
+
+@media (max-width: 760px) {
+  .nav {
+    flex-wrap: wrap;
+  }
+}
