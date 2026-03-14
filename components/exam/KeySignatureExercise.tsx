@@ -1,79 +1,56 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Accidental, Renderer, Stave, StaveNote, TickContext } from "vexflow";
-import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
 import styles from "./KeySignatureExercise.module.css";
+import type {
+  AccidentalSymbol,
+  ClefType,
+} from "@/features/notation/model/types";
+import { KEY_SIGNATURE_MAX } from "@/features/notation/model/constants";
+import {
+  keyFromLineIndex,
+  lineIndexFromSvgClickY,
+} from "@/features/notation/interaction/mapping";
+import { drawStaff } from "@/features/notation/render/drawStaff";
+import { gradeDKeySignatureAttempt } from "@/features/notation/grading/gradeKeySignature";
+import { moveLineIndex } from "@/features/notation/interaction/keyboard";
 
-type Clef = "treble" | "bass";
-type AccidentalType = "#" | "b";
+type AccidentalType = Extract<AccidentalSymbol, "#" | "b">;
 
 interface PlacedAccidental {
   note: string;
   type: AccidentalType;
 }
 
-const EXPECTED_D_MAJOR: PlacedAccidental[] = [
-  { note: "f/5", type: "#" },
-  { note: "c/5", type: "#" },
-];
-
-const TREBLE_NOTES = ["f/5", "e/5", "d/5", "c/5", "b/4", "a/4", "g/4", "f/4", "e/4"];
-const BASS_NOTES = ["a/3", "g/3", "f/3", "e/3", "d/3", "c/3", "b/2", "a/2", "g/2"];
-
 export default function KeySignatureExercise() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<PlacedAccidental[]>([]);
-  const [clef, setClef] = useState<Clef>("treble");
+  const [clef, setClef] = useState<ClefType>("treble");
   const [accidental, setAccidental] = useState<AccidentalType>("#");
   const [eraseMode, setEraseMode] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [cursorLine, setCursorLine] = useState(2);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     const draw = async () => {
-      await ensureVexFlowFonts();
       if (!containerRef.current) return;
 
-      containerRef.current.innerHTML = "";
-      const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
-      renderer.resize(640, 220);
-
-      const context = renderer.getContext();
-      const stave = new Stave(10, 44, 620);
-      stave.addClef(clef);
-      stave.setContext(context).draw();
-
-      placed.forEach((item, index) => {
-        const vfNote = new StaveNote({
-          clef,
-          keys: [item.note],
-          duration: "q",
-        });
-        vfNote.addModifier(new Accidental(item.type), 0);
-
-        const tick = new TickContext();
-        tick.addTickable(vfNote).preFormat().setX(56 + index * 44);
-        vfNote.setStave(stave);
-        vfNote.setContext(context);
-        vfNote.draw();
+      await drawStaff({
+        container: containerRef.current,
+        clef,
+        kind: "keysig",
+        items: placed.map((item) => ({
+          key: item.note,
+          accidental: item.type,
+        })),
       });
     };
 
     draw();
   }, [placed, clef]);
-
-  const currentNotes = clef === "treble" ? TREBLE_NOTES : BASS_NOTES;
-
-  const lineFromClick = (y: number) => {
-    const vexY = y / 1.5;
-    const top = 76.67;
-    const spacing = 5;
-    const line = Math.round((vexY - top) / spacing);
-    return Math.max(0, Math.min(currentNotes.length - 1, line));
-  };
 
   const onStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || submitted) return;
@@ -82,7 +59,9 @@ export default function KeySignatureExercise() {
 
     const rect = svg.getBoundingClientRect();
     const y = event.clientY - rect.top;
-    const note = currentNotes[lineFromClick(y)];
+    const line = lineIndexFromSvgClickY(y);
+    const note = keyFromLineIndex(clef, line);
+    setCursorLine(line);
 
     if (eraseMode) {
       setPlaced((prev) => prev.filter((entry) => entry.note !== note));
@@ -91,15 +70,50 @@ export default function KeySignatureExercise() {
 
     setPlaced((prev) => {
       const withoutNote = prev.filter((entry) => entry.note !== note);
-      return [...withoutNote, { note, type: accidental }].slice(0, 7);
+      return [...withoutNote, { note, type: accidental }].slice(
+        0,
+        KEY_SIGNATURE_MAX
+      );
     });
   };
 
+  const onNotationKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (submitted) return;
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setCursorLine((line) => moveLineIndex(line, "up", clef));
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setCursorLine((line) => moveLineIndex(line, "down", clef));
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const note = keyFromLineIndex(clef, cursorLine);
+      if (eraseMode) {
+        setPlaced((prev) => prev.filter((entry) => entry.note !== note));
+        return;
+      }
+
+      setPlaced((prev) => {
+        const withoutNote = prev.filter((entry) => entry.note !== note);
+        return [...withoutNote, { note, type: accidental }].slice(
+          0,
+          KEY_SIGNATURE_MAX
+        );
+      });
+    }
+  };
+
   const grade = () => {
-    const expected = EXPECTED_D_MAJOR.map((item) => `${item.note}${item.type}`);
     const student = placed.map((item) => `${item.note}${item.type}`);
-    const correct = student.filter((item) => expected.includes(item)).length;
-    setScore(Math.round((correct / expected.length) * 100));
+    const result = gradeDKeySignatureAttempt(clef, student);
+    setScore(result.score);
     setSubmitted(true);
   };
 
@@ -121,7 +135,11 @@ export default function KeySignatureExercise() {
       <div className={styles.controls}>
         <label>
           Clef
-          <select value={clef} onChange={(e) => setClef(e.target.value as Clef)} disabled={submitted}>
+          <select
+            value={clef}
+            onChange={(e) => setClef(e.target.value as ClefType)}
+            disabled={submitted}
+          >
             <option value="treble">Treble</option>
             <option value="bass">Bass</option>
           </select>
@@ -168,7 +186,15 @@ export default function KeySignatureExercise() {
       </div>
 
       <div className={styles.canvasWrap}>
-        <div ref={containerRef} className="vexflow-container" onClick={onStaffClick} />
+        <div
+          ref={containerRef}
+          className="vexflow-container"
+          onClick={onStaffClick}
+          onKeyDown={onNotationKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-label="Key signature notation staff"
+        />
       </div>
 
       {score !== null && (

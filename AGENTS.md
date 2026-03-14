@@ -36,7 +36,7 @@ Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra
 - [x] Remove Chakra provider and Chakra dependencies from active app routes.
 - [x] Replace Chakra UI layout/components with semantic HTML + CSS classes.
 - [x] Create rewrite-oriented folder scaffolding under `features/` and `styles/`.
-- [ ] Ensure lint and typecheck run clean after shell migration. (blocked: package manager missing in runtime)
+- [x] Ensure lint and typecheck run clean after shell migration.
 
 ### Phase 2 - Vanilla CSS Design System (Classy Minimalist, Light-Only)
 
@@ -51,11 +51,11 @@ Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra
 
 ### Phase 3 - VexFlow Engine Rebuild
 
-- [ ] Implement render surface with SVG backend in a client component.
-- [ ] Move away from ad-hoc SVG text insertion for accidentals.
-- [ ] Implement deterministic click-to-position mapping per clef.
-- [ ] Support erase mode, accidental mode, and keyboard interaction.
-- [ ] Keep notation target size at ~1.5x VexFlow default.
+- [x] Implement render surface with SVG backend in a client component.
+- [x] Move away from ad-hoc SVG text insertion for accidentals.
+- [x] Implement deterministic click-to-position mapping per clef.
+- [x] Support erase mode, accidental mode, and keyboard interaction.
+- [x] Keep notation target size at ~1.5x VexFlow default.
 
 ### Phase 4 - Exam Flow Rebuild
 
