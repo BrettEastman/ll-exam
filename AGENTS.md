@@ -74,7 +74,7 @@ Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra
 
 - [x] Unit tests for grading and notation model transforms.
 - [x] Integration checks for full two-page exam flow.
-- [ ] Manual QA for treble/bass notation interactions.
+- [x] Manual QA for treble/bass notation interactions.
 - [x] Run `npm run lint` and `npm run build` before handoff.
 
 ## Execution Notes For OpenCode Agents

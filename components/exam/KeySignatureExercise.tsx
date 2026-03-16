@@ -8,6 +8,7 @@ import type {
 } from "@/features/notation/model/types";
 import { KEY_SIGNATURE_MAX } from "@/features/notation/model/constants";
 import {
+  inferStaffGeometryFromSvg,
   keyFromLineIndex,
   lineIndexFromSvgClickY,
 } from "@/features/notation/interaction/mapping";
@@ -97,7 +98,8 @@ export default function KeySignatureExercise({
 
     const rect = svg.getBoundingClientRect();
     const y = event.clientY - rect.top;
-    const line = lineIndexFromSvgClickY(y);
+    const geometry = inferStaffGeometryFromSvg(svg) ?? undefined;
+    const line = lineIndexFromSvgClickY(y, geometry);
     const note = keyFromLineIndex(clef, line);
     setCursorLine(line);
 

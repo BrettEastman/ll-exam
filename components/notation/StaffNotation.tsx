@@ -8,6 +8,7 @@ import type {
 } from "@/features/notation/model/types";
 import { SCALE_NOTES_MAX } from "@/features/notation/model/constants";
 import {
+  inferStaffGeometryFromSvg,
   keyFromLineIndex,
   lineIndexFromSvgClickY,
 } from "@/features/notation/interaction/mapping";
@@ -92,7 +93,8 @@ export default function StaffNotation({
 
     const rect = svg.getBoundingClientRect();
     const clickY = event.clientY - rect.top;
-    const line = lineIndexFromSvgClickY(clickY);
+    const geometry = inferStaffGeometryFromSvg(svg) ?? undefined;
+    const line = lineIndexFromSvgClickY(clickY, geometry);
     const key = keyFromLineIndex(clef, line);
     setCursorLine(line);
 
