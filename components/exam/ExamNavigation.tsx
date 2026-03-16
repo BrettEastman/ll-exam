@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Text, Circle } from '@chakra-ui/react';
+import styles from "./ExamNavigation.module.css";
 
 interface ExamNavigationProps {
   currentPage: number;
@@ -6,6 +6,7 @@ interface ExamNavigationProps {
   onPrevious: () => void;
   onNext: () => void;
   onFinish: () => void;
+  finishDisabled?: boolean;
 }
 
 export default function ExamNavigation({
@@ -13,71 +14,51 @@ export default function ExamNavigation({
   totalPages,
   onPrevious,
   onNext,
-  onFinish
+  onFinish,
+  finishDisabled = false,
 }: ExamNavigationProps) {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
   return (
-    <Box
-      borderTopWidth="2px"
-      borderColor="gray.200"
-      bg="gray.50"
-      p={5}
-    >
-      <HStack justify="space-between" align="center">
-        {/* Previous Button */}
-        <Button
-          onClick={onPrevious}
-          disabled={isFirstPage}
-          variant="outline"
-          colorScheme="gray"
-          size="lg"
-        >
-          ← Previous
-        </Button>
+    <nav className={styles.nav} aria-label="Exam page navigation">
+      <button className={styles.button} onClick={onPrevious} disabled={isFirstPage}>
+        Previous
+      </button>
 
-        {/* Progress Indicator */}
-        <HStack gap={3} align="center">
+      <div className={styles.progress}>
+        <div className={styles.dots}>
           {Array.from({ length: totalPages }, (_, i) => (
-            <Circle
+            <span
               key={i + 1}
-              size="3"
-              bg={
+              className={
                 i + 1 === currentPage
-                  ? 'blue.500'
+                  ? `${styles.dot} ${styles.current}`
                   : i + 1 < currentPage
-                  ? 'green.500'
-                  : 'gray.300'
+                  ? `${styles.dot} ${styles.complete}`
+                  : styles.dot
               }
-              transition="all 0.3s"
             />
           ))}
-          <Text ml={2} color="gray.600">
-            {currentPage} of {totalPages}
-          </Text>
-        </HStack>
+        </div>
+        <p>
+          {currentPage} of {totalPages}
+        </p>
+      </div>
 
-        {/* Next/Finish Button */}
-        {isLastPage ? (
-          <Button
-            onClick={onFinish}
-            colorScheme="green"
-            size="lg"
-            fontWeight="bold"
-          >
-            Finish Exam ✓
-          </Button>
-        ) : (
-          <Button
-            onClick={onNext}
-            colorScheme="blue"
-            size="lg"
-          >
-            Next →
-          </Button>
-        )}
-      </HStack>
-    </Box>
+      {isLastPage ? (
+        <button
+          className={`${styles.button} ${styles.finish}`}
+          onClick={onFinish}
+          disabled={finishDisabled}
+        >
+          Finish Exam
+        </button>
+      ) : (
+        <button className={`${styles.button} ${styles.next}`} onClick={onNext}>
+          Next
+        </button>
+      )}
+    </nav>
   );
 }

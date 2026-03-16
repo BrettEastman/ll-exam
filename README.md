@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LydianLab Music Theory Exam
 
-## Getting Started
+LydianLab is a two-page interactive music theory placement exam built with Next.js, TypeScript, and VexFlow. It is designed for educational programs that need a clean, web-based notation assessment experience with persistent progress and automatic scoring.
 
-First, run the development server:
+## What This App Does
+
+- Presents a timed, two-part entrance exam:
+  - **Page 1:** D major scale notation
+  - **Page 2:** D major key signature notation
+- Uses native VexFlow rendering and interaction for click/keyboard note entry.
+- Supports treble and bass clef notation.
+- Grades each section and shows a completion summary with overall score.
+- Includes a 60-minute timer with auto-submit when time expires.
+- Saves progress locally and syncs attempts to Firestore for authenticated users.
+
+## Stack
+
+- Next.js 15 + React 19 + TypeScript
+- VexFlow 5 (native API, SVG backend)
+- Firebase Authentication (email/password + verification)
+- Firestore persistence (`examAttempts/{uid}`)
+- Vanilla CSS (light mode only)
+- Bun for dependency management and test execution
+
+## Architecture Overview
+
+- `features/notation/model` - notation types and constants
+- `features/notation/render` - VexFlow draw pipeline
+- `features/notation/interaction` - click/keyboard mapping logic
+- `features/notation/grading` - pure grading functions
+- `features/exam/model` - exam domain models and flow helpers
+- `features/exam/state` - draft/timer/access hooks
+- `features/exam/persistence` - local draft + Firestore sync
+- `features/auth` - auth API, provider, and auth error handling
+
+## Local Setup
+
+1. Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Create `.env.local` with Firebase web config:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Run the app:
 
-## Learn More
+```bash
+bun run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open `http://localhost:3000`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Firebase Requirements
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Enable **Email/Password** in Firebase Auth.
+- Enable **Email Verification** template.
+- Create Firestore in Native mode.
+- Apply rules so each user can only access their own attempt document:
 
-## Deploy on Vercel
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /examAttempts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `bun run dev` - start development server
+- `bun run lint` - run ESLint
+- `bun run test` - run Bun tests
+- `bun run build` - production build
+- `bun run start` - serve production build
+
+## Notes
+
+- This project intentionally uses a light-only visual system.
+- Styling is semantic HTML + vanilla CSS (no other UI frameworks).
+- The notation interaction model is tested with Bun-based unit tests.
