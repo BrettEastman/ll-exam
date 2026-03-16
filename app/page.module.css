@@ -95,6 +95,13 @@
   justify-content: center;
 }
 
+.authHint {
+  margin: 0;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
 .cta {
   display: inline-block;
   text-decoration: none;

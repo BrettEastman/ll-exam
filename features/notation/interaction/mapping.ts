@@ -14,6 +14,6 @@ export function lineIndexFromSvgClickY(y: number): number {
   const geometry = defaultStaffGeometry();
   const halfStep = geometry.spacingBetweenLines / 2;
   const unscaledY = y / geometry.scale;
-  const idx = Math.round((unscaledY - geometry.topLineY) / halfStep);
+  const idx = Math.round((unscaledY - geometry.topLineY) / halfStep) - 1;
   return clampIndex(idx, NOTE_KEYS_BY_CLEF.treble.length);
 }

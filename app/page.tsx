@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import styles from "./page.module.css";
+import { useAuthSession } from "@/features/auth/state/AuthProvider";
 
 export default function Home() {
+  const { user, isReady, isConfigured } = useAuthSession();
+  const canEnterExam = !isConfigured || Boolean(user?.emailVerified);
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -43,10 +47,22 @@ export default function Home() {
       </section>
 
       <div className={styles.ctaWrap}>
-        <Link href="/exam/1" className={styles.cta}>
-          Start Exam
-        </Link>
+        {canEnterExam ? (
+          <Link href="/exam/1" className={styles.cta}>
+            Start Exam
+          </Link>
+        ) : (
+          <Link href="/auth" className={styles.cta}>
+            Sign In to Start
+          </Link>
+        )}
       </div>
+
+      {isReady && isConfigured && !canEnterExam && (
+        <p className={styles.authHint}>
+          Sign in and verify your email to sync progress across devices.
+        </p>
+      )}
     </main>
   );
 }

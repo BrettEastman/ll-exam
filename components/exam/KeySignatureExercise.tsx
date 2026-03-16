@@ -14,6 +14,10 @@ import {
 import { drawStaff } from "@/features/notation/render/drawStaff";
 import { gradeDKeySignatureAttempt } from "@/features/notation/grading/gradeKeySignature";
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
+import type {
+  KeySignatureDraftNote,
+  SectionResult,
+} from "@/features/exam/model/types";
 
 type AccidentalType = Extract<AccidentalSymbol, "#" | "b">;
 
@@ -22,14 +26,35 @@ interface PlacedAccidental {
   type: AccidentalType;
 }
 
-export default function KeySignatureExercise() {
+interface KeySignatureExerciseProps {
+  initialClef?: ClefType;
+  initialNotes?: KeySignatureDraftNote[];
+  initialResult?: SectionResult | null;
+  onDraftChange?: (payload: {
+    clef: ClefType;
+    notes: KeySignatureDraftNote[];
+    result: SectionResult | null;
+  }) => void;
+}
+
+export default function KeySignatureExercise({
+  initialClef = "treble",
+  initialNotes = [],
+  initialResult = null,
+  onDraftChange,
+}: KeySignatureExerciseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [placed, setPlaced] = useState<PlacedAccidental[]>([]);
-  const [clef, setClef] = useState<ClefType>("treble");
+  const [placed, setPlaced] = useState<PlacedAccidental[]>(
+    initialNotes as PlacedAccidental[]
+  );
+  const [clef, setClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalType>("#");
   const [eraseMode, setEraseMode] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState(Boolean(initialResult));
+  const [score, setScore] = useState<number | null>(initialResult?.score ?? null);
+  const [submittedAt, setSubmittedAt] = useState<number | null>(
+    initialResult?.submittedAt ?? null
+  );
   const [cursorLine, setCursorLine] = useState(2);
 
   useEffect(() => {
@@ -51,6 +76,19 @@ export default function KeySignatureExercise() {
 
     draw();
   }, [placed, clef]);
+
+  useEffect(() => {
+    if (!onDraftChange) return;
+
+    onDraftChange({
+      clef,
+      notes: placed,
+      result:
+        score !== null && submitted && submittedAt !== null
+          ? { score, submittedAt }
+          : null,
+    });
+  }, [clef, placed, score, submitted, submittedAt, onDraftChange]);
 
   const onStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || submitted) return;
@@ -114,12 +152,14 @@ export default function KeySignatureExercise() {
     const student = placed.map((item) => `${item.note}${item.type}`);
     const result = gradeDKeySignatureAttempt(clef, student);
     setScore(result.score);
+    setSubmittedAt(Date.now());
     setSubmitted(true);
   };
 
   const reset = () => {
     setPlaced([]);
     setScore(null);
+    setSubmittedAt(null);
     setSubmitted(false);
     setEraseMode(false);
     setAccidental("#");

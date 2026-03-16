@@ -6,6 +6,7 @@ interface ExamNavigationProps {
   onPrevious: () => void;
   onNext: () => void;
   onFinish: () => void;
+  finishDisabled?: boolean;
 }
 
 export default function ExamNavigation({
@@ -13,7 +14,8 @@ export default function ExamNavigation({
   totalPages,
   onPrevious,
   onNext,
-  onFinish
+  onFinish,
+  finishDisabled = false,
 }: ExamNavigationProps) {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
@@ -45,7 +47,11 @@ export default function ExamNavigation({
       </div>
 
       {isLastPage ? (
-        <button className={`${styles.button} ${styles.finish}`} onClick={onFinish}>
+        <button
+          className={`${styles.button} ${styles.finish}`}
+          onClick={onFinish}
+          disabled={finishDisabled}
+        >
           Finish Exam
         </button>
       ) : (

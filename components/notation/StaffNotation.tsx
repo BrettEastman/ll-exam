@@ -17,21 +17,43 @@ import {
   normalizeKeyToPitchClass,
 } from "@/features/notation/grading/gradeScale";
 import { drawStaff } from "@/features/notation/render/drawStaff";
+import type { ScaleDraftNote, SectionResult } from "@/features/exam/model/types";
 
 interface PlacedNote {
   key: string;
   accidental?: AccidentalSymbol;
 }
 
-export default function StaffNotation() {
+interface StaffNotationProps {
+  initialClef?: ClefType;
+  initialNotes?: ScaleDraftNote[];
+  initialResult?: SectionResult | null;
+  onDraftChange?: (payload: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  }) => void;
+}
+
+export default function StaffNotation({
+  initialClef = "treble",
+  initialNotes = [],
+  initialResult = null,
+  onDraftChange,
+}: StaffNotationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>([]);
-  const [clef, setClef] = useState<ClefType>("treble");
+  const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>(
+    initialNotes as PlacedNote[]
+  );
+  const [clef, setClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalSymbol | null>(null);
   const [cursorLine, setCursorLine] = useState(6);
   const [eraseMode, setEraseMode] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(Boolean(initialResult));
+  const [score, setScore] = useState<number | null>(initialResult?.score ?? null);
+  const [submittedAt, setSubmittedAt] = useState<number | null>(
+    initialResult?.submittedAt ?? null
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -49,6 +71,19 @@ export default function StaffNotation() {
 
     draw();
   }, [placedNotes, clef]);
+
+  useEffect(() => {
+    if (!onDraftChange) return;
+
+    onDraftChange({
+      clef,
+      notes: placedNotes,
+      result:
+        score !== null && isSubmitted && submittedAt !== null
+          ? { score, submittedAt }
+          : null,
+    });
+  }, [clef, placedNotes, score, isSubmitted, submittedAt, onDraftChange]);
 
   const onStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isSubmitted) return;
@@ -112,12 +147,14 @@ export default function StaffNotation() {
     );
     const result = gradeScaleAttempt(actual);
     setScore(result.score);
+    setSubmittedAt(Date.now());
     setIsSubmitted(true);
   };
 
   const reset = () => {
     setPlacedNotes([]);
     setScore(null);
+    setSubmittedAt(null);
     setIsSubmitted(false);
     setEraseMode(false);
     setAccidental(null);
