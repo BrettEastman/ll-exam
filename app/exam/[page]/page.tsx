@@ -15,6 +15,7 @@ import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
 import { clearDraft } from "@/features/exam/persistence/draft";
 import type { KeySignatureDraftNote, ScaleDraftNote } from "@/features/exam/model/types";
+import { getExamProgress } from "@/features/exam/model/flow";
 
 function areScaleNotesEqual(a: ScaleDraftNote[], b: ScaleDraftNote[]) {
   if (a.length !== b.length) return false;
@@ -90,14 +91,7 @@ export default function ExamPage() {
     [patchDraft]
   );
 
-  const scaleCompleted = Boolean(draft.scale.result);
-  const keySignatureCompleted = Boolean(draft.keySignature.result);
-  const canFinish = scaleCompleted && keySignatureCompleted;
-
-  const totalScore =
-    draft.scale.result && draft.keySignature.result
-      ? Math.round((draft.scale.result.score + draft.keySignature.result.score) / 2)
-      : null;
+  const { canFinish, totalScore } = getExamProgress(draft);
 
   // Redirect invalid pages
   useEffect(() => {
