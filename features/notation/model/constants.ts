@@ -10,8 +10,8 @@ export const KEY_SIGNATURE_MAX = 7;
 export const SCALE_NOTE_X_START = 60;
 export const SCALE_NOTE_X_STEP = 75;
 
-export const KEYSIG_X_START = 56;
-export const KEYSIG_X_STEP = 44;
+export const KEYSIG_X_START = 46;
+export const KEYSIG_X_STEP = 34;
 
 export const NOTE_TOP_LINE_INDEX = 5;
 

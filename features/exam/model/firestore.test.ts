@@ -21,6 +21,20 @@ describe("toFirestoreExamAttempt", () => {
     expect(payload.currentPage).toBe(2);
     expect(payload.scale.notes).toEqual(draft.scale.notes);
   });
+
+  test("omits undefined accidentals for Firestore compatibility", () => {
+    const draft = createEmptyDraft(1000);
+    draft.scale.notes = [
+      { key: "d/4", accidental: undefined },
+      { key: "f/4", accidental: "#" },
+    ];
+
+    const payload = toFirestoreExamAttempt(draft);
+    expect(payload.scale.notes).toEqual([
+      { key: "d/4" },
+      { key: "f/4", accidental: "#" },
+    ]);
+  });
 });
 
 describe("isFirestoreExamAttempt", () => {

@@ -1,4 +1,12 @@
-import { Accidental, Renderer, Stave, StaveNote, TickContext } from "vexflow";
+import {
+  Accidental,
+  Element,
+  Renderer,
+  Stave,
+  StaveNote,
+  TickContext,
+  VexFlow,
+} from "vexflow";
 import {
   KEYSIG_X_START,
   KEYSIG_X_STEP,
@@ -17,6 +25,19 @@ export interface DrawStaffOptions {
   kind: "scale" | "keysig";
 }
 
+function accidentalGlyph(accidental: NotationItem["accidental"]): string | null {
+  switch (accidental) {
+    case "#":
+      return VexFlow.Glyphs.accidentalSharp;
+    case "b":
+      return VexFlow.Glyphs.accidentalFlat;
+    case "n":
+      return VexFlow.Glyphs.accidentalNatural;
+    default:
+      return null;
+  }
+}
+
 export async function drawStaff(options: DrawStaffOptions): Promise<void> {
   const { container, clef, items, kind } = options;
 
@@ -33,6 +54,26 @@ export async function drawStaff(options: DrawStaffOptions): Promise<void> {
 
   const startX = kind === "keysig" ? KEYSIG_X_START : SCALE_NOTE_X_START;
   const stepX = kind === "keysig" ? KEYSIG_X_STEP : SCALE_NOTE_X_STEP;
+
+  if (kind === "keysig") {
+    items.forEach((item, index) => {
+      if (!item.accidental) return;
+
+      const glyphText = accidentalGlyph(item.accidental);
+      if (!glyphText) return;
+
+      const keyProps = VexFlow.keyProperties(item.key, clef);
+      if (!keyProps || typeof keyProps.line !== "number") return;
+
+      const glyph = new Element("KeySignature");
+      glyph.setText(glyphText);
+      glyph.setContext(context);
+      glyph.setYShift(stave.getYForNote(keyProps.line));
+      glyph.renderText(context, startX + index * stepX, 0);
+    });
+
+    return;
+  }
 
   items.forEach((item, index) => {
     const note = new StaveNote({
