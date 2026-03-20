@@ -7,7 +7,7 @@ export const STAFF_RENDER_SCALE = 1.5;
 export const SCALE_NOTES_MAX = 7;
 export const KEY_SIGNATURE_MAX = 7;
 
-export const SCALE_NOTE_X_START = 60;
+export const SCALE_NOTE_X_START = 24;
 export const SCALE_NOTE_X_STEP = 75;
 
 export const KEYSIG_X_START = 46;
