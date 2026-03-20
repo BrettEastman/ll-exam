@@ -171,7 +171,6 @@ export default function KeySignatureExercise({
     <section className={styles.wrap}>
       <div className={styles.instructions}>
         <p>Place the correct accidentals for the D major key signature.</p>
-        <p>Hint: D major requires two sharps (F# and C#).</p>
       </div>
 
       <div className={styles.controls}>

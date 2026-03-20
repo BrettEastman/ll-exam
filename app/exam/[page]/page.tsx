@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import ScaleExercise from "../../../components/exam/ScaleExercise";
 import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
 import ExamNavigation from "../../../components/exam/ExamNavigation";
@@ -13,7 +13,6 @@ import {
 import { useExamTimer } from "@/features/exam/state/useExamTimer";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
-import { clearDraft } from "@/features/exam/persistence/draft";
 import type {
   KeySignatureDraftNote,
   ScaleDraftNote,
@@ -47,9 +46,7 @@ export default function ExamPage() {
   const params = useParams();
   const router = useRouter();
   const currentPage = parseInt(params.page as string);
-  const [summaryOpen, setSummaryOpen] = useState(false);
-  const { draft, isHydrated, patchDraft, syncStatus, syncMessage } =
-    useExamDraft();
+  const { draft, isHydrated, patchDraft } = useExamDraft();
   const access = useExamAccess();
   const timer = useExamTimer(draft.startedAt, draft.submitted);
 
@@ -96,7 +93,7 @@ export default function ExamPage() {
     [patchDraft],
   );
 
-  const { canFinish, totalScore } = getExamProgress(draft);
+  const { canFinish } = getExamProgress(draft);
 
   // Redirect invalid pages
   useEffect(() => {
@@ -131,8 +128,13 @@ export default function ExamPage() {
       submitted: true,
       autoSubmitted: true,
     }));
-    setSummaryOpen(true);
-  }, [isHydrated, draft.submitted, timer.isExpired, patchDraft]);
+    router.replace("/exam/results");
+  }, [isHydrated, draft.submitted, timer.isExpired, patchDraft, router]);
+
+  useEffect(() => {
+    if (!isHydrated || !draft.submitted || timer.isExpired) return;
+    router.replace("/exam/results");
+  }, [draft.submitted, isHydrated, router, timer.isExpired]);
 
   if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_TOTAL_PAGES) {
     return <main className={styles.examPage}>Loading...</main>;
@@ -166,13 +168,7 @@ export default function ExamPage() {
       submitted: true,
       autoSubmitted: false,
     }));
-    setSummaryOpen(true);
-  };
-
-  const startNewAttempt = () => {
-    clearDraft();
-    router.push("/exam/1");
-    router.refresh();
+    router.push("/exam/results");
   };
 
   return (
@@ -187,18 +183,6 @@ export default function ExamPage() {
         </div>
         <p className={styles.description}>{currentExam.description}</p>
         <p className={styles.timer}>Time Remaining: {timer.label}</p>
-        <p
-          className={
-            syncStatus === "error"
-              ? `${styles.sync} ${styles.syncError}`
-              : syncStatus === "offline"
-                ? `${styles.sync} ${styles.syncOffline}`
-                : styles.sync
-          }
-        >
-          Sync: {syncStatus}
-          {syncMessage ? ` — ${syncMessage}` : ""}
-        </p>
       </header>
 
       <section>
@@ -225,30 +209,8 @@ export default function ExamPage() {
         onPrevious={handlePrevious}
         onNext={handleNext}
         onFinish={handleFinish}
-        finishDisabled={!canFinish || draft.submitted}
+        finishDisabled={!canFinish}
       />
-
-      {(summaryOpen || draft.submitted) && (
-        <section className={styles.summary}>
-          <h3>Exam Summary</h3>
-          <p>
-            Submission Type:{" "}
-            {draft.autoSubmitted ? "Auto-submit" : "Manual submit"}
-          </p>
-          <p>Scale Score: {draft.scale.result?.score ?? 0}%</p>
-          <p>Key Signature Score: {draft.keySignature.result?.score ?? 0}%</p>
-          <p>
-            <strong>Overall Score: {totalScore ?? 0}%</strong>
-          </p>
-          <button
-            type="button"
-            className={styles.newAttempt}
-            onClick={startNewAttempt}
-          >
-            Start New Attempt
-          </button>
-        </section>
-      )}
     </main>
   );
 }
