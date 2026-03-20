@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LydianLab Music Theory Exam",
-  description: "Interactive music theory entrance exam for music camp placement",
+  title: "Lydian Lab Music Theory Exam",
+  description:
+    "Interactive music theory entrance exam for music camp placement",
 };
 
 export default function RootLayout({

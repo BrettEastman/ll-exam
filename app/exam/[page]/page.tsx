@@ -14,7 +14,10 @@ import { useExamTimer } from "@/features/exam/state/useExamTimer";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
 import { clearDraft } from "@/features/exam/persistence/draft";
-import type { KeySignatureDraftNote, ScaleDraftNote } from "@/features/exam/model/types";
+import type {
+  KeySignatureDraftNote,
+  ScaleDraftNote,
+} from "@/features/exam/model/types";
 import { getExamProgress } from "@/features/exam/model/flow";
 
 function areScaleNotesEqual(a: ScaleDraftNote[], b: ScaleDraftNote[]) {
@@ -29,7 +32,7 @@ function areScaleNotesEqual(a: ScaleDraftNote[], b: ScaleDraftNote[]) {
 
 function areKeySignatureNotesEqual(
   a: KeySignatureDraftNote[],
-  b: KeySignatureDraftNote[]
+  b: KeySignatureDraftNote[],
 ) {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i += 1) {
@@ -45,7 +48,8 @@ export default function ExamPage() {
   const router = useRouter();
   const currentPage = parseInt(params.page as string);
   const [summaryOpen, setSummaryOpen] = useState(false);
-  const { draft, isHydrated, patchDraft, syncStatus, syncMessage } = useExamDraft();
+  const { draft, isHydrated, patchDraft, syncStatus, syncMessage } =
+    useExamDraft();
   const access = useExamAccess();
   const timer = useExamTimer(draft.startedAt, draft.submitted);
 
@@ -67,7 +71,7 @@ export default function ExamPage() {
         };
       });
     },
-    [patchDraft]
+    [patchDraft],
   );
 
   const handleKeySignatureDraftChange = useCallback(
@@ -76,7 +80,8 @@ export default function ExamPage() {
         if (
           prev.keySignature.clef === keySignature.clef &&
           prev.keySignature.result?.score === keySignature.result?.score &&
-          prev.keySignature.result?.submittedAt === keySignature.result?.submittedAt &&
+          prev.keySignature.result?.submittedAt ===
+            keySignature.result?.submittedAt &&
           areKeySignatureNotesEqual(prev.keySignature.notes, keySignature.notes)
         ) {
           return prev;
@@ -88,7 +93,7 @@ export default function ExamPage() {
         };
       });
     },
-    [patchDraft]
+    [patchDraft],
   );
 
   const { canFinish, totalScore } = getExamProgress(draft);
@@ -129,11 +134,7 @@ export default function ExamPage() {
     setSummaryOpen(true);
   }, [isHydrated, draft.submitted, timer.isExpired, patchDraft]);
 
-  if (
-    isNaN(currentPage) ||
-    currentPage < 1 ||
-    currentPage > EXAM_TOTAL_PAGES
-  ) {
+  if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_TOTAL_PAGES) {
     return <main className={styles.examPage}>Loading...</main>;
   }
 
@@ -177,7 +178,7 @@ export default function ExamPage() {
   return (
     <main className={styles.examPage}>
       <header className={styles.header}>
-        <h1>LydianLab Music Theory Exam</h1>
+        <h1>Lydian Lab Music Theory Exam</h1>
         <div className={styles.titleRow}>
           <h2>{currentExam.title}</h2>
           <p>
@@ -191,8 +192,8 @@ export default function ExamPage() {
             syncStatus === "error"
               ? `${styles.sync} ${styles.syncError}`
               : syncStatus === "offline"
-              ? `${styles.sync} ${styles.syncOffline}`
-              : styles.sync
+                ? `${styles.sync} ${styles.syncOffline}`
+                : styles.sync
           }
         >
           Sync: {syncStatus}
@@ -231,14 +232,19 @@ export default function ExamPage() {
         <section className={styles.summary}>
           <h3>Exam Summary</h3>
           <p>
-            Submission Type: {draft.autoSubmitted ? "Auto-submit" : "Manual submit"}
+            Submission Type:{" "}
+            {draft.autoSubmitted ? "Auto-submit" : "Manual submit"}
           </p>
           <p>Scale Score: {draft.scale.result?.score ?? 0}%</p>
           <p>Key Signature Score: {draft.keySignature.result?.score ?? 0}%</p>
           <p>
             <strong>Overall Score: {totalScore ?? 0}%</strong>
           </p>
-          <button type="button" className={styles.newAttempt} onClick={startNewAttempt}>
+          <button
+            type="button"
+            className={styles.newAttempt}
+            onClick={startNewAttempt}
+          >
             Start New Attempt
           </button>
         </section>

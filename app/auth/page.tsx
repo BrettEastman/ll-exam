@@ -14,7 +14,8 @@ import styles from "./page.module.css";
 type AuthMode = "login" | "register";
 
 export default function AuthPage() {
-  const { user, isReady, isConfigured, refreshUser, signOut } = useAuthSession();
+  const { user, isReady, isConfigured, refreshUser, signOut } =
+    useAuthSession();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +28,7 @@ export default function AuthPage() {
       mode === "login"
         ? "Sign in to continue your exam"
         : "Create your account",
-    [mode]
+    [mode],
   );
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -42,11 +43,15 @@ export default function AuthPage() {
         if (nextUser.emailVerified) {
           setMessage("Signed in successfully.");
         } else {
-          setMessage("Signed in. Please verify your email before starting the exam.");
+          setMessage(
+            "Signed in. Please verify your email before starting the exam.",
+          );
         }
       } else {
         await registerWithEmail({ email, password });
-        setMessage("Account created. Check your inbox for a verification email.");
+        setMessage(
+          "Account created. Check your inbox for a verification email.",
+        );
       }
     } catch (authError) {
       setError(getAuthErrorMessage(authError));
@@ -108,7 +113,11 @@ export default function AuthPage() {
             <Link href="/exam/1" className={styles.cta}>
               Go to Exam
             </Link>
-            <button type="button" onClick={() => void signOut()} className={styles.ghost}>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className={styles.ghost}
+            >
               Sign Out
             </button>
           </div>
@@ -123,17 +132,29 @@ export default function AuthPage() {
         <section className={styles.card}>
           <h1>Verify your email</h1>
           <p>
-            You are signed in as <strong>{user.email ?? "your account"}</strong>.
-            Verify your email to unlock the exam.
+            You are signed in as <strong>{user.email ?? "your account"}</strong>
+            . Verify your email to unlock the exam.
           </p>
           <div className={styles.actions}>
-            <button type="button" className={styles.cta} onClick={onResendVerification}>
+            <button
+              type="button"
+              className={styles.cta}
+              onClick={onResendVerification}
+            >
               Resend Verification
             </button>
-            <button type="button" className={styles.ghost} onClick={onRefreshVerification}>
+            <button
+              type="button"
+              className={styles.ghost}
+              onClick={onRefreshVerification}
+            >
               I Verified, Refresh
             </button>
-            <button type="button" className={styles.ghost} onClick={() => void signOut()}>
+            <button
+              type="button"
+              className={styles.ghost}
+              onClick={() => void signOut()}
+            >
               Use Another Account
             </button>
           </div>
@@ -147,7 +168,7 @@ export default function AuthPage() {
   return (
     <main className={styles.page}>
       <section className={styles.card}>
-        <p className={styles.kicker}>LydianLab</p>
+        <p className={styles.kicker}>Lydian Lab</p>
         <h1>{headerText}</h1>
         <p>Use your account so your exam draft syncs to Firestore.</p>
 
@@ -167,7 +188,9 @@ export default function AuthPage() {
             Password
             <input
               type="password"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -179,8 +202,8 @@ export default function AuthPage() {
             {isSubmitting
               ? "Please wait..."
               : mode === "login"
-              ? "Sign In"
-              : "Create Account"}
+                ? "Sign In"
+                : "Create Account"}
           </button>
         </form>
 

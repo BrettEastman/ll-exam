@@ -11,8 +11,8 @@ export default function Home() {
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.kicker}>LydianLab</p>
-        <h1>LydianLab Music Theory Entrance Exam</h1>
+        <p className={styles.kicker}>Lydian Lab</p>
+        <h1>Lydian Lab Music Theory Entrance Exam</h1>
         <p>
           A two-part notation assessment for class placement. The exam focuses
           on scale construction and key signature fluency.

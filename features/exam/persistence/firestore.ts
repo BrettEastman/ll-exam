@@ -15,7 +15,12 @@ import {
 export class ExamSyncError extends Error {
   constructor(
     message: string,
-    readonly code: "offline" | "permission" | "unavailable" | "unknown"
+    readonly code:
+      | "offline"
+      | "permission"
+      | "unavailable"
+      | "invalid-data"
+      | "unknown"
   ) {
     super(message);
     this.name = "ExamSyncError";
@@ -37,6 +42,13 @@ function toExamSyncError(error: unknown): ExamSyncError {
     return new ExamSyncError(
       "Firestore is temporarily unavailable. Please try again.",
       "unavailable"
+    );
+  }
+
+  if (code === "invalid-argument") {
+    return new ExamSyncError(
+      "Exam data could not be synced due to an invalid value.",
+      "invalid-data"
     );
   }
 

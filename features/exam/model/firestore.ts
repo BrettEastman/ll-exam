@@ -33,7 +33,13 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
     autoSubmitted: draft.autoSubmitted,
     scale: {
       clef: draft.scale.clef,
-      notes: draft.scale.notes,
+      notes: draft.scale.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
       result: draft.scale.result,
     },
     keySignature: {

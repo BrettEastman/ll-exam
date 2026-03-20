@@ -1,6 +1,6 @@
-# LydianLab Music Theory Exam
+# Lydian Lab Music Theory Exam
 
-LydianLab is a two-page interactive music theory placement exam built with Next.js, TypeScript, and VexFlow. It is designed for educational programs that need a clean, web-based notation assessment experience with persistent progress and automatic scoring.
+Lydian Lab Music Theory Exam is a two-page interactive music theory placement exam built with Next.js, TypeScript, and VexFlow. It is designed for educational programs that need a clean, web-based notation assessment experience with persistent progress and automatic scoring.
 
 ## What This App Does
 
