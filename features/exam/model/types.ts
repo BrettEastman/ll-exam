@@ -31,6 +31,16 @@ export interface ExamDraft {
     notes: KeySignatureDraftNote[];
     result: SectionResult | null;
   };
+  scaleBMinor: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  };
+  keySignatureCMinor: {
+    clef: ClefType;
+    notes: KeySignatureDraftNote[];
+    result: SectionResult | null;
+  };
 }
 
 export type ExamSyncStatus =

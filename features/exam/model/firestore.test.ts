@@ -10,16 +10,23 @@ import {
 describe("toFirestoreExamAttempt", () => {
   test("maps draft fields and status correctly", () => {
     const draft = createEmptyDraft(1000);
-    draft.currentPage = 2;
+    draft.currentPage = 4;
     draft.submitted = true;
     draft.autoSubmitted = true;
     draft.scale.notes = [{ key: "d/4" }, { key: "f/4", accidental: "#" }];
+    draft.scaleBMinor.notes = [{ key: "b/3" }, { key: "c/4", accidental: "#" }];
+    draft.keySignatureCMinor.notes = [
+      { note: "b/4", type: "b" },
+      { note: "e/5", type: "b" },
+    ];
 
     const payload = toFirestoreExamAttempt(draft);
     expect(payload.version).toBe(EXAM_ATTEMPT_SCHEMA_VERSION);
     expect(payload.status).toBe("submitted");
-    expect(payload.currentPage).toBe(2);
+    expect(payload.currentPage).toBe(4);
     expect(payload.scale.notes).toEqual(draft.scale.notes);
+    expect(payload.scaleBMinor.notes).toEqual(draft.scaleBMinor.notes);
+    expect(payload.keySignatureCMinor.notes).toEqual(draft.keySignatureCMinor.notes);
   });
 
   test("omits undefined accidentals for Firestore compatibility", () => {
@@ -49,18 +56,20 @@ describe("isFirestoreExamAttempt", () => {
       autoSubmitted: false,
       scale: { clef: "treble", notes: [], result: null },
       keySignature: { clef: "treble", notes: [], result: null },
+      scaleBMinor: { clef: "treble", notes: [], result: null },
+      keySignatureCMinor: { clef: "treble", notes: [], result: null },
     };
 
     expect(isFirestoreExamAttempt(valid)).toBe(true);
   });
 
-  test("rejects invalid page and missing scale/keySignature", () => {
+  test("rejects invalid page and missing required sections", () => {
     expect(
       isFirestoreExamAttempt({
         version: 1,
         startedAt: 1,
         updatedAt: 2,
-        currentPage: 3,
+        currentPage: 5,
         submitted: false,
         autoSubmitted: false,
       })
@@ -77,7 +86,7 @@ describe("sanitizeFirestoreExamAttempt", () => {
         status: "draft",
         startedAt: 10,
         updatedAt: 20,
-        currentPage: 2,
+        currentPage: 4,
         submitted: true,
         autoSubmitted: false,
         scale: {
@@ -90,6 +99,16 @@ describe("sanitizeFirestoreExamAttempt", () => {
           notes: [{ note: "f/5", type: "#" }, { note: "x", type: "n" }],
           result: { score: 70, submittedAt: 456 },
         },
+        scaleBMinor: {
+          clef: "treble",
+          notes: [{ key: "b/4" }, { key: "c/5", accidental: "#" }],
+          result: { score: 84, submittedAt: 789 },
+        },
+        keySignatureCMinor: {
+          clef: "bass",
+          notes: [{ note: "b/2", type: "b" }, { note: "a/2", type: "x" }],
+          result: { score: 90, submittedAt: 999 },
+        },
       },
       fallback
     );
@@ -98,6 +117,11 @@ describe("sanitizeFirestoreExamAttempt", () => {
     expect(sanitized.scale.notes).toEqual([{ key: "d/3", accidental: "#" }]);
     expect(sanitized.scale.result?.score).toBe(100);
     expect(sanitized.keySignature.notes).toEqual([{ note: "f/5", type: "#" }]);
+    expect(sanitized.scaleBMinor.notes).toEqual([
+      { key: "b/4" },
+      { key: "c/5", accidental: "#" },
+    ]);
+    expect(sanitized.keySignatureCMinor.notes).toEqual([{ note: "b/2", type: "b" }]);
   });
 
   test("returns fallback when payload is invalid", () => {

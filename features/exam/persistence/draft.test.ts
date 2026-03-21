@@ -9,6 +9,8 @@ describe("createEmptyDraft", () => {
     expect(draft.currentPage).toBe(1);
     expect(draft.scale.clef).toBe("treble");
     expect(draft.keySignature.clef).toBe("treble");
+    expect(draft.scaleBMinor.clef).toBe("treble");
+    expect(draft.keySignatureCMinor.clef).toBe("treble");
   });
 });
 
@@ -21,20 +23,32 @@ describe("sanitizeDraft", () => {
       submitted: 1,
       autoSubmitted: 0,
       scale: { clef: "alto", notes: [{ key: "d/4" }], result: null },
-      keySignature: {
-        clef: "bass",
-        notes: [{ note: "f/3", type: "#" }],
-        result: null,
-      },
+        keySignature: {
+          clef: "bass",
+          notes: [{ note: "f/3", type: "#" }],
+          result: null,
+        },
+        scaleBMinor: {
+          clef: "bass",
+          notes: [{ key: "b/3" }],
+          result: null,
+        },
+        keySignatureCMinor: {
+          clef: "treble",
+          notes: [{ note: "b/4", type: "b" }],
+          result: null,
+        },
     });
 
     expect(sanitized.startedAt).toBe(10);
     expect(sanitized.updatedAt).toBe(20);
-    expect(sanitized.currentPage).toBe(2);
+    expect(sanitized.currentPage).toBe(4);
     expect(sanitized.submitted).toBe(true);
     expect(sanitized.autoSubmitted).toBe(false);
     expect(sanitized.scale.clef).toBe("treble");
     expect(sanitized.keySignature.clef).toBe("bass");
+    expect(sanitized.scaleBMinor.clef).toBe("bass");
+    expect(sanitized.keySignatureCMinor.clef).toBe("treble");
   });
 
   test("returns fallback draft for non-object payload", () => {
@@ -42,5 +56,7 @@ describe("sanitizeDraft", () => {
     expect(sanitized.currentPage).toBe(1);
     expect(sanitized.scale.notes).toEqual([]);
     expect(sanitized.keySignature.notes).toEqual([]);
+    expect(sanitized.scaleBMinor.notes).toEqual([]);
+    expect(sanitized.keySignatureCMinor.notes).toEqual([]);
   });
 });

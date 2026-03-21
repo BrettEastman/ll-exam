@@ -11,7 +11,7 @@ export const SCALE_NOTE_X_START = 24;
 export const SCALE_NOTE_X_STEP = 75;
 
 export const KEYSIG_X_START = 46;
-export const KEYSIG_X_STEP = 34;
+export const KEYSIG_X_STEP = 20;
 
 export const NOTE_TOP_LINE_INDEX = 5;
 
@@ -61,10 +61,16 @@ export const NOTE_KEYS_BY_CLEF: Record<ClefType, readonly string[]> = {
 };
 
 export const D_MAJOR_SCALE = ["d", "e", "f#", "g", "a", "b", "c#"];
+export const B_NATURAL_MINOR_SCALE = ["b", "c#", "d", "e", "f#", "g", "a"];
 
 export const D_MAJOR_KEYSIG_BY_CLEF: Record<ClefType, readonly string[]> = {
   treble: ["f/5#", "c/5#"],
   bass: ["f/3#", "c/3#"],
+};
+
+export const C_MINOR_KEYSIG_BY_CLEF: Record<ClefType, readonly string[]> = {
+  treble: ["b/4b", "e/5b", "a/4b"],
+  bass: ["b/2b", "e/3b", "a/2b"],
 };
 
 export function defaultStaffGeometry(): StaffGeometry {

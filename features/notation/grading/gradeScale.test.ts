@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { gradeScaleAttempt, normalizeKeyToPitchClass } from "./gradeScale";
+import {
+  gradeBMinorScaleAttempt,
+  gradeScaleAttempt,
+  normalizeKeyToPitchClass,
+} from "./gradeScale";
 
 describe("normalizeKeyToPitchClass", () => {
   test("normalizes pitch classes with and without accidental", () => {
@@ -23,5 +27,14 @@ describe("gradeScaleAttempt", () => {
     expect(result.correct).toEqual(["d", "e", "g", "a", "b"]);
     expect(result.incorrect).toEqual(["f", "c"]);
     expect(result.missing).toEqual(["f#", "c#"]);
+  });
+});
+
+describe("gradeBMinorScaleAttempt", () => {
+  test("returns 100 when full B natural minor scale is correct", () => {
+    const result = gradeBMinorScaleAttempt(["b", "c#", "d", "e", "f#", "g", "a"]);
+    expect(result.score).toBe(100);
+    expect(result.incorrect).toEqual([]);
+    expect(result.missing).toEqual([]);
   });
 });

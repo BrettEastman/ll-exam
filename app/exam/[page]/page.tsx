@@ -93,6 +93,52 @@ export default function ExamPage() {
     [patchDraft],
   );
 
+  const handleBMinorScaleDraftChange = useCallback(
+    (scaleBMinor: (typeof draft)["scaleBMinor"]) => {
+      patchDraft((prev) => {
+        if (
+          prev.scaleBMinor.clef === scaleBMinor.clef &&
+          prev.scaleBMinor.result?.score === scaleBMinor.result?.score &&
+          prev.scaleBMinor.result?.submittedAt === scaleBMinor.result?.submittedAt &&
+          areScaleNotesEqual(prev.scaleBMinor.notes, scaleBMinor.notes)
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          scaleBMinor,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
+  const handleCMinorKeySignatureDraftChange = useCallback(
+    (keySignatureCMinor: (typeof draft)["keySignatureCMinor"]) => {
+      patchDraft((prev) => {
+        if (
+          prev.keySignatureCMinor.clef === keySignatureCMinor.clef &&
+          prev.keySignatureCMinor.result?.score === keySignatureCMinor.result?.score &&
+          prev.keySignatureCMinor.result?.submittedAt ===
+            keySignatureCMinor.result?.submittedAt &&
+          areKeySignatureNotesEqual(
+            prev.keySignatureCMinor.notes,
+            keySignatureCMinor.notes,
+          )
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          keySignatureCMinor,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
   const { canFinish } = getExamProgress(draft);
 
   // Redirect invalid pages
@@ -148,7 +194,7 @@ export default function ExamPage() {
     return <main className={styles.examPage}>Preparing exam access...</main>;
   }
 
-  const currentExam = EXAM_PAGE_META[currentPage as 1 | 2];
+  const currentExam = EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
 
   const handleNext = () => {
     if (currentPage < EXAM_TOTAL_PAGES) {
@@ -187,6 +233,22 @@ export default function ExamPage() {
 
       <section>
         {currentPage === 1 ? (
+          <KeySignatureExercise
+            initialClef={draft.keySignature.clef}
+            initialNotes={draft.keySignature.notes}
+            initialResult={draft.keySignature.result}
+            onDraftChange={handleKeySignatureDraftChange}
+          />
+        ) : currentPage === 2 ? (
+          <KeySignatureExercise
+            initialClef={draft.keySignatureCMinor.clef}
+            initialNotes={draft.keySignatureCMinor.notes}
+            initialResult={draft.keySignatureCMinor.result}
+            onDraftChange={handleCMinorKeySignatureDraftChange}
+            prompt="Place the correct accidentals for the C minor key signature."
+            keySignatureId="c-minor"
+          />
+        ) : currentPage === 3 ? (
           <ScaleExercise
             initialClef={draft.scale.clef}
             initialNotes={draft.scale.notes}
@@ -194,11 +256,13 @@ export default function ExamPage() {
             onDraftChange={handleScaleDraftChange}
           />
         ) : (
-          <KeySignatureExercise
-            initialClef={draft.keySignature.clef}
-            initialNotes={draft.keySignature.notes}
-            initialResult={draft.keySignature.result}
-            onDraftChange={handleKeySignatureDraftChange}
+          <ScaleExercise
+            initialClef={draft.scaleBMinor.clef}
+            initialNotes={draft.scaleBMinor.notes}
+            initialResult={draft.scaleBMinor.result}
+            onDraftChange={handleBMinorScaleDraftChange}
+            prompt="Enter the B natural minor scale in order."
+            scaleId="b-minor"
           />
         )}
       </section>

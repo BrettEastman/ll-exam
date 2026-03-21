@@ -1,4 +1,4 @@
-import { D_MAJOR_SCALE } from "../model/constants";
+import { B_NATURAL_MINOR_SCALE, D_MAJOR_SCALE } from "../model/constants";
 import type { GradeResult } from "../model/types";
 
 export function normalizeKeyToPitchClass(key: string, accidental?: string): string {
@@ -6,7 +6,7 @@ export function normalizeKeyToPitchClass(key: string, accidental?: string): stri
   return `${name}${accidental ?? ""}`;
 }
 
-export function gradeScaleAttempt(input: string[]): GradeResult {
+function gradeAgainstExpected(input: string[], expected: readonly string[]): GradeResult {
   const result: GradeResult = {
     correct: [],
     incorrect: [],
@@ -15,19 +15,27 @@ export function gradeScaleAttempt(input: string[]): GradeResult {
   };
 
   input.forEach((note, index) => {
-    if (D_MAJOR_SCALE[index] === note) {
+    if (expected[index] === note) {
       result.correct.push(note);
     } else {
       result.incorrect.push(note);
     }
   });
 
-  D_MAJOR_SCALE.forEach((correct, index) => {
+  expected.forEach((correct, index) => {
     if (input[index] !== correct) {
       result.missing.push(correct);
     }
   });
 
-  result.score = Math.round((result.correct.length / D_MAJOR_SCALE.length) * 100);
+  result.score = Math.round((result.correct.length / expected.length) * 100);
   return result;
+}
+
+export function gradeScaleAttempt(input: string[]): GradeResult {
+  return gradeAgainstExpected(input, D_MAJOR_SCALE);
+}
+
+export function gradeBMinorScaleAttempt(input: string[]): GradeResult {
+  return gradeAgainstExpected(input, B_NATURAL_MINOR_SCALE);
 }

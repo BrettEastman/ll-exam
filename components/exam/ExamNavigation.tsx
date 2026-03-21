@@ -19,6 +19,10 @@ export default function ExamNavigation({
 }: ExamNavigationProps) {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
+  const isKeySignatureSection = currentPage <= Math.ceil(totalPages / 2);
+  const sectionLabel = isKeySignatureSection
+    ? "Section 1: Key Signatures"
+    : "Section 2: Scales";
 
   return (
     <nav className={styles.nav} aria-label="Exam page navigation">
@@ -27,6 +31,7 @@ export default function ExamNavigation({
       </button>
 
       <div className={styles.progress}>
+        <p className={styles.sectionLabel}>{sectionLabel}</p>
         <div className={styles.dots}>
           {Array.from({ length: totalPages }, (_, i) => (
             <span

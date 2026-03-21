@@ -45,8 +45,10 @@ export default function ExamResultsPage() {
       <section className={styles.card}>
         <h1>Exam Summary</h1>
         <p className={styles.meta}>Your exam has been submitted.</p>
-        <p>Scale Score: {draft.scale.result?.score ?? 0}%</p>
-        <p>Key Signature Score: {draft.keySignature.result?.score ?? 0}%</p>
+        <p>D Major Key Signature Score: {draft.keySignature.result?.score ?? 0}%</p>
+        <p>C Minor Key Signature Score: {draft.keySignatureCMinor.result?.score ?? 0}%</p>
+        <p>D Major Scale Score: {draft.scale.result?.score ?? 0}%</p>
+        <p>B Minor Scale Score: {draft.scaleBMinor.result?.score ?? 0}%</p>
         <p className={styles.total}>
           <strong>Overall Score: {totalScore ?? 0}%</strong>
         </p>

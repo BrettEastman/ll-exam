@@ -15,6 +15,7 @@ import {
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
 import {
   gradeScaleAttempt,
+  gradeBMinorScaleAttempt,
   normalizeKeyToPitchClass,
 } from "@/features/notation/grading/gradeScale";
 import { drawStaff } from "@/features/notation/render/drawStaff";
@@ -34,6 +35,8 @@ interface StaffNotationProps {
     notes: ScaleDraftNote[];
     result: SectionResult | null;
   }) => void;
+  prompt?: string;
+  scaleId?: "d-major" | "b-minor";
 }
 
 export default function StaffNotation({
@@ -41,6 +44,8 @@ export default function StaffNotation({
   initialNotes = [],
   initialResult = null,
   onDraftChange,
+  prompt = "Enter the D major scale in order.",
+  scaleId = "d-major",
 }: StaffNotationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>(
@@ -147,7 +152,10 @@ export default function StaffNotation({
     const actual = placedNotes.map((note) =>
       normalizeKeyToPitchClass(note.key, note.accidental)
     );
-    const result = gradeScaleAttempt(actual);
+    const result =
+      scaleId === "b-minor"
+        ? gradeBMinorScaleAttempt(actual)
+        : gradeScaleAttempt(actual);
     setScore(result.score);
     setSubmittedAt(Date.now());
     setIsSubmitted(true);
@@ -165,10 +173,7 @@ export default function StaffNotation({
   return (
     <section className={styles.wrap}>
       <div className={styles.instructions}>
-        <p>
-          Enter the D major scale in order: D, E, F#, G, A, B, C#. Octave does
-          not matter.
-        </p>
+        <p>{prompt}</p>
       </div>
 
       <div className={styles.controls}>
@@ -176,7 +181,10 @@ export default function StaffNotation({
           Clef
           <select
             value={clef}
-            onChange={(e) => setClef(e.target.value as ClefType)}
+            onChange={(e) => {
+              setEraseMode(false);
+              setClef(e.target.value as ClefType);
+            }}
             disabled={isSubmitted}
           >
             <option value="treble">Treble</option>
@@ -188,7 +196,10 @@ export default function StaffNotation({
           <button
             type="button"
             className={accidental === null && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental(null)}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental(null);
+            }}
             disabled={isSubmitted}
           >
             None
@@ -196,7 +207,10 @@ export default function StaffNotation({
           <button
             type="button"
             className={accidental === "#" && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental("#")}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental("#");
+            }}
             disabled={isSubmitted}
           >
             Sharp
@@ -204,7 +218,10 @@ export default function StaffNotation({
           <button
             type="button"
             className={accidental === "b" && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental("b")}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental("b");
+            }}
             disabled={isSubmitted}
           >
             Flat
@@ -212,7 +229,10 @@ export default function StaffNotation({
           <button
             type="button"
             className={accidental === "n" && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental("n")}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental("n");
+            }}
             disabled={isSubmitted}
           >
             Natural

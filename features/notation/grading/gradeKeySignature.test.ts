@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { gradeDKeySignatureAttempt } from "./gradeKeySignature";
+import {
+  gradeCMinorKeySignatureAttempt,
+  gradeDKeySignatureAttempt,
+} from "./gradeKeySignature";
 
 describe("gradeDKeySignatureAttempt", () => {
   test("grades correct treble key signature as 100", () => {
@@ -15,5 +18,14 @@ describe("gradeDKeySignatureAttempt", () => {
     expect(result.correct).toEqual(["f/3#"]);
     expect(result.incorrect).toEqual(["c/4#"]);
     expect(result.missing).toEqual(["c/3#"]);
+  });
+});
+
+describe("gradeCMinorKeySignatureAttempt", () => {
+  test("grades correct treble key signature as 100", () => {
+    const result = gradeCMinorKeySignatureAttempt("treble", ["b/4b", "e/5b", "a/4b"]);
+    expect(result.score).toBe(100);
+    expect(result.incorrect).toEqual([]);
+    expect(result.missing).toEqual([]);
   });
 });
