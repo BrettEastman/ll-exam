@@ -30,6 +30,10 @@ export interface FirestoreExamAttempt {
     notes: KeySignatureDraftNote[];
     result: ExamDraft["keySignatureCMinor"]["result"];
   };
+  identifyKeySignatures: {
+    answers: string[];
+    result: ExamDraft["identifyKeySignatures"]["result"];
+  };
 }
 
 export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
@@ -72,6 +76,10 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
       clef: draft.keySignatureCMinor.clef,
       notes: draft.keySignatureCMinor.notes,
       result: draft.keySignatureCMinor.result,
+    },
+    identifyKeySignatures: {
+      answers: draft.identifyKeySignatures.answers,
+      result: draft.identifyKeySignatures.result,
     },
   };
 }
@@ -183,6 +191,14 @@ export function sanitizeFirestoreExamAttempt(
       clef: value.keySignatureCMinor?.clef === "bass" ? "bass" : "treble",
       notes: sanitizeKeySignatureNotes(value.keySignatureCMinor?.notes),
       result: sanitizeResult(value.keySignatureCMinor?.result),
+    },
+    identifyKeySignatures: {
+      answers: Array.isArray(value.identifyKeySignatures?.answers)
+        ? value.identifyKeySignatures.answers.filter(
+            (answer): answer is string => typeof answer === "string",
+          )
+        : fallback.identifyKeySignatures.answers,
+      result: sanitizeResult(value.identifyKeySignatures?.result),
     },
   };
 }

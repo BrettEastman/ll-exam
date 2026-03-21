@@ -1,0 +1,79 @@
+.wrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-soft);
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.instructions p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.card {
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.staff {
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 0.3rem;
+}
+
+.answer {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.answer input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.actions button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  font: inherit;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import ScaleExercise from "../../../components/exam/ScaleExercise";
 import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
+import IdentifyKeySignaturesExercise from "../../../components/exam/IdentifyKeySignaturesExercise";
 import ExamNavigation from "../../../components/exam/ExamNavigation";
 import styles from "./page.module.css";
 import {
@@ -139,6 +140,35 @@ export default function ExamPage() {
     [patchDraft],
   );
 
+  const handleIdentifyKeySignaturesDraftChange = useCallback(
+    (identifyKeySignatures: (typeof draft)["identifyKeySignatures"]) => {
+      patchDraft((prev) => {
+        const sameAnswers =
+          prev.identifyKeySignatures.answers.length ===
+            identifyKeySignatures.answers.length &&
+          prev.identifyKeySignatures.answers.every(
+            (value, index) => value === identifyKeySignatures.answers[index],
+          );
+
+        if (
+          sameAnswers &&
+          prev.identifyKeySignatures.result?.score ===
+            identifyKeySignatures.result?.score &&
+          prev.identifyKeySignatures.result?.submittedAt ===
+            identifyKeySignatures.result?.submittedAt
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          identifyKeySignatures,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
   const { canFinish } = getExamProgress(draft);
 
   // Redirect invalid pages
@@ -255,7 +285,7 @@ export default function ExamPage() {
             initialResult={draft.scale.result}
             onDraftChange={handleScaleDraftChange}
           />
-        ) : (
+        ) : currentPage === 4 ? (
           <ScaleExercise
             initialClef={draft.scaleBMinor.clef}
             initialNotes={draft.scaleBMinor.notes}
@@ -263,6 +293,12 @@ export default function ExamPage() {
             onDraftChange={handleBMinorScaleDraftChange}
             prompt="Enter the B natural minor scale in order."
             scaleId="b-minor"
+          />
+        ) : (
+          <IdentifyKeySignaturesExercise
+            initialAnswers={draft.identifyKeySignatures.answers}
+            initialResult={draft.identifyKeySignatures.result}
+            onDraftChange={handleIdentifyKeySignaturesDraftChange}
           />
         )}
       </section>

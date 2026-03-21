@@ -31,6 +31,10 @@ export function createEmptyDraft(now = Date.now()): ExamDraft {
       notes: [],
       result: null,
     },
+    identifyKeySignatures: {
+      answers: [],
+      result: null,
+    },
   };
 }
 
@@ -75,6 +79,14 @@ export function sanitizeDraft(input: unknown): ExamDraft {
         ? draft.keySignatureCMinor.notes
         : [],
       result: draft.keySignatureCMinor?.result ?? null,
+    },
+    identifyKeySignatures: {
+      answers: Array.isArray(draft.identifyKeySignatures?.answers)
+        ? draft.identifyKeySignatures.answers.filter(
+            (value): value is string => typeof value === "string",
+          )
+        : [],
+      result: draft.identifyKeySignatures?.result ?? null,
     },
   };
 }

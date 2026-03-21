@@ -19,6 +19,7 @@ describe("toFirestoreExamAttempt", () => {
       { note: "b/4", type: "b" },
       { note: "e/5", type: "b" },
     ];
+    draft.identifyKeySignatures.answers = ["db major", "a major", "f minor", "c# minor"];
 
     const payload = toFirestoreExamAttempt(draft);
     expect(payload.version).toBe(EXAM_ATTEMPT_SCHEMA_VERSION);
@@ -27,6 +28,9 @@ describe("toFirestoreExamAttempt", () => {
     expect(payload.scale.notes).toEqual(draft.scale.notes);
     expect(payload.scaleBMinor.notes).toEqual(draft.scaleBMinor.notes);
     expect(payload.keySignatureCMinor.notes).toEqual(draft.keySignatureCMinor.notes);
+    expect(payload.identifyKeySignatures.answers).toEqual(
+      draft.identifyKeySignatures.answers,
+    );
   });
 
   test("omits undefined accidentals for Firestore compatibility", () => {
@@ -58,6 +62,7 @@ describe("isFirestoreExamAttempt", () => {
       keySignature: { clef: "treble", notes: [], result: null },
       scaleBMinor: { clef: "treble", notes: [], result: null },
       keySignatureCMinor: { clef: "treble", notes: [], result: null },
+      identifyKeySignatures: { answers: [], result: null },
     };
 
     expect(isFirestoreExamAttempt(valid)).toBe(true);
@@ -109,6 +114,10 @@ describe("sanitizeFirestoreExamAttempt", () => {
           notes: [{ note: "b/2", type: "b" }, { note: "a/2", type: "x" }],
           result: { score: 90, submittedAt: 999 },
         },
+        identifyKeySignatures: {
+          answers: ["db major", 12, null, "f minor"],
+          result: { score: 75, submittedAt: 1200 },
+        },
       },
       fallback
     );
@@ -122,6 +131,7 @@ describe("sanitizeFirestoreExamAttempt", () => {
       { key: "c/5", accidental: "#" },
     ]);
     expect(sanitized.keySignatureCMinor.notes).toEqual([{ note: "b/2", type: "b" }]);
+    expect(sanitized.identifyKeySignatures.answers).toEqual(["db major", "f minor"]);
   });
 
   test("returns fallback when payload is invalid", () => {

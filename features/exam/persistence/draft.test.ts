@@ -11,6 +11,7 @@ describe("createEmptyDraft", () => {
     expect(draft.keySignature.clef).toBe("treble");
     expect(draft.scaleBMinor.clef).toBe("treble");
     expect(draft.keySignatureCMinor.clef).toBe("treble");
+    expect(draft.identifyKeySignatures.answers).toEqual([]);
   });
 });
 
@@ -38,17 +39,22 @@ describe("sanitizeDraft", () => {
           notes: [{ note: "b/4", type: "b" }],
           result: null,
         },
+        identifyKeySignatures: {
+          answers: ["db major", "a major"],
+          result: null,
+        },
     });
 
     expect(sanitized.startedAt).toBe(10);
     expect(sanitized.updatedAt).toBe(20);
-    expect(sanitized.currentPage).toBe(4);
+    expect(sanitized.currentPage).toBe(5);
     expect(sanitized.submitted).toBe(true);
     expect(sanitized.autoSubmitted).toBe(false);
     expect(sanitized.scale.clef).toBe("treble");
     expect(sanitized.keySignature.clef).toBe("bass");
     expect(sanitized.scaleBMinor.clef).toBe("bass");
     expect(sanitized.keySignatureCMinor.clef).toBe("treble");
+    expect(sanitized.identifyKeySignatures.answers).toEqual(["db major", "a major"]);
   });
 
   test("returns fallback draft for non-object payload", () => {
@@ -58,5 +64,6 @@ describe("sanitizeDraft", () => {
     expect(sanitized.keySignature.notes).toEqual([]);
     expect(sanitized.scaleBMinor.notes).toEqual([]);
     expect(sanitized.keySignatureCMinor.notes).toEqual([]);
+    expect(sanitized.identifyKeySignatures.answers).toEqual([]);
   });
 });

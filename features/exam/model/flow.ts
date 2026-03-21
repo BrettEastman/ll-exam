@@ -5,6 +5,7 @@ export interface ExamProgress {
   keySignatureCompleted: boolean;
   bMinorScaleCompleted: boolean;
   cMinorKeySignatureCompleted: boolean;
+  identifyKeySignaturesCompleted: boolean;
   canFinish: boolean;
   totalScore: number | null;
 }
@@ -14,18 +15,21 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
   const keySignatureCompleted = Boolean(draft.keySignature.result);
   const bMinorScaleCompleted = Boolean(draft.scaleBMinor.result);
   const cMinorKeySignatureCompleted = Boolean(draft.keySignatureCMinor.result);
+  const identifyKeySignaturesCompleted = Boolean(draft.identifyKeySignatures.result);
   const canFinish =
     scaleCompleted &&
     keySignatureCompleted &&
     bMinorScaleCompleted &&
-    cMinorKeySignatureCompleted;
+    cMinorKeySignatureCompleted &&
+    identifyKeySignaturesCompleted;
   const totalScore = canFinish
     ? Math.round(
         (draft.scale.result!.score +
           draft.keySignature.result!.score +
           draft.scaleBMinor.result!.score +
-          draft.keySignatureCMinor.result!.score) /
-          4
+          draft.keySignatureCMinor.result!.score +
+          draft.identifyKeySignatures.result!.score) /
+          5
       )
     : null;
 
@@ -34,6 +38,7 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
     keySignatureCompleted,
     bMinorScaleCompleted,
     cMinorKeySignatureCompleted,
+    identifyKeySignaturesCompleted,
     canFinish,
     totalScore,
   };

@@ -41,6 +41,10 @@ export interface ExamDraft {
     notes: KeySignatureDraftNote[];
     result: SectionResult | null;
   };
+  identifyKeySignatures: {
+    answers: string[];
+    result: SectionResult | null;
+  };
 }
 
 export type ExamSyncStatus =

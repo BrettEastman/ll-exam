@@ -19,10 +19,13 @@ export default function ExamNavigation({
 }: ExamNavigationProps) {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
-  const isKeySignatureSection = currentPage <= Math.ceil(totalPages / 2);
+  const isKeySignatureSection = currentPage <= 2;
+  const isScaleSection = currentPage >= 3 && currentPage <= 4;
   const sectionLabel = isKeySignatureSection
     ? "Section 1: Key Signatures"
-    : "Section 2: Scales";
+    : isScaleSection
+      ? "Section 2: Scales"
+      : "Section 3: Identify Key Signatures";
 
   return (
     <nav className={styles.nav} aria-label="Exam page navigation">
