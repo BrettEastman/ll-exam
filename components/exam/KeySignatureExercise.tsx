@@ -179,10 +179,6 @@ export default function KeySignatureExercise({
 
   return (
     <section className={styles.wrap}>
-      <div className={styles.instructions}>
-        <p>{prompt}</p>
-      </div>
-
       <div className={styles.controls}>
         <label>
           Clef

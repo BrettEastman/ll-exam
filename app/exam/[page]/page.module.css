@@ -37,6 +37,10 @@
 
 .description {
   margin-top: 0.5rem;
+  color: var(--color-ink);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  line-height: 1.25;
+  font-weight: 600;
 }
 
 .timer {
