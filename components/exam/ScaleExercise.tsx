@@ -10,6 +10,8 @@ interface ScaleExerciseProps {
     notes: ScaleDraftNote[];
     result: SectionResult | null;
   }) => void;
+  prompt?: string;
+  scaleId?: "d-major" | "b-minor";
 }
 
 export default function ScaleExercise(props: ScaleExerciseProps) {

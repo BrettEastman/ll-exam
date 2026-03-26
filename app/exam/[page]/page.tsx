@@ -1,9 +1,10 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import ScaleExercise from "../../../components/exam/ScaleExercise";
 import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
+import IdentifyKeySignaturesExercise from "../../../components/exam/IdentifyKeySignaturesExercise";
 import ExamNavigation from "../../../components/exam/ExamNavigation";
 import styles from "./page.module.css";
 import {
@@ -13,7 +14,6 @@ import {
 import { useExamTimer } from "@/features/exam/state/useExamTimer";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
-import { clearDraft } from "@/features/exam/persistence/draft";
 import type {
   KeySignatureDraftNote,
   ScaleDraftNote,
@@ -47,9 +47,7 @@ export default function ExamPage() {
   const params = useParams();
   const router = useRouter();
   const currentPage = parseInt(params.page as string);
-  const [summaryOpen, setSummaryOpen] = useState(false);
-  const { draft, isHydrated, patchDraft, syncStatus, syncMessage } =
-    useExamDraft();
+  const { draft, isHydrated, patchDraft } = useExamDraft();
   const access = useExamAccess();
   const timer = useExamTimer(draft.startedAt, draft.submitted);
 
@@ -96,7 +94,82 @@ export default function ExamPage() {
     [patchDraft],
   );
 
-  const { canFinish, totalScore } = getExamProgress(draft);
+  const handleBMinorScaleDraftChange = useCallback(
+    (scaleBMinor: (typeof draft)["scaleBMinor"]) => {
+      patchDraft((prev) => {
+        if (
+          prev.scaleBMinor.clef === scaleBMinor.clef &&
+          prev.scaleBMinor.result?.score === scaleBMinor.result?.score &&
+          prev.scaleBMinor.result?.submittedAt === scaleBMinor.result?.submittedAt &&
+          areScaleNotesEqual(prev.scaleBMinor.notes, scaleBMinor.notes)
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          scaleBMinor,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
+  const handleCMinorKeySignatureDraftChange = useCallback(
+    (keySignatureCMinor: (typeof draft)["keySignatureCMinor"]) => {
+      patchDraft((prev) => {
+        if (
+          prev.keySignatureCMinor.clef === keySignatureCMinor.clef &&
+          prev.keySignatureCMinor.result?.score === keySignatureCMinor.result?.score &&
+          prev.keySignatureCMinor.result?.submittedAt ===
+            keySignatureCMinor.result?.submittedAt &&
+          areKeySignatureNotesEqual(
+            prev.keySignatureCMinor.notes,
+            keySignatureCMinor.notes,
+          )
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          keySignatureCMinor,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
+  const handleIdentifyKeySignaturesDraftChange = useCallback(
+    (identifyKeySignatures: (typeof draft)["identifyKeySignatures"]) => {
+      patchDraft((prev) => {
+        const sameAnswers =
+          prev.identifyKeySignatures.answers.length ===
+            identifyKeySignatures.answers.length &&
+          prev.identifyKeySignatures.answers.every(
+            (value, index) => value === identifyKeySignatures.answers[index],
+          );
+
+        if (
+          sameAnswers &&
+          prev.identifyKeySignatures.result?.score ===
+            identifyKeySignatures.result?.score &&
+          prev.identifyKeySignatures.result?.submittedAt ===
+            identifyKeySignatures.result?.submittedAt
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          identifyKeySignatures,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
+  const { canFinish } = getExamProgress(draft);
 
   // Redirect invalid pages
   useEffect(() => {
@@ -131,8 +204,13 @@ export default function ExamPage() {
       submitted: true,
       autoSubmitted: true,
     }));
-    setSummaryOpen(true);
-  }, [isHydrated, draft.submitted, timer.isExpired, patchDraft]);
+    router.replace("/exam/results");
+  }, [isHydrated, draft.submitted, timer.isExpired, patchDraft, router]);
+
+  useEffect(() => {
+    if (!isHydrated || !draft.submitted || timer.isExpired) return;
+    router.replace("/exam/results");
+  }, [draft.submitted, isHydrated, router, timer.isExpired]);
 
   if (isNaN(currentPage) || currentPage < 1 || currentPage > EXAM_TOTAL_PAGES) {
     return <main className={styles.examPage}>Loading...</main>;
@@ -146,7 +224,7 @@ export default function ExamPage() {
     return <main className={styles.examPage}>Preparing exam access...</main>;
   }
 
-  const currentExam = EXAM_PAGE_META[currentPage as 1 | 2];
+  const currentExam = EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
 
   const handleNext = () => {
     if (currentPage < EXAM_TOTAL_PAGES) {
@@ -166,13 +244,7 @@ export default function ExamPage() {
       submitted: true,
       autoSubmitted: false,
     }));
-    setSummaryOpen(true);
-  };
-
-  const startNewAttempt = () => {
-    clearDraft();
-    router.push("/exam/1");
-    router.refresh();
+    router.push("/exam/results");
   };
 
   return (
@@ -187,34 +259,46 @@ export default function ExamPage() {
         </div>
         <p className={styles.description}>{currentExam.description}</p>
         <p className={styles.timer}>Time Remaining: {timer.label}</p>
-        <p
-          className={
-            syncStatus === "error"
-              ? `${styles.sync} ${styles.syncError}`
-              : syncStatus === "offline"
-                ? `${styles.sync} ${styles.syncOffline}`
-                : styles.sync
-          }
-        >
-          Sync: {syncStatus}
-          {syncMessage ? ` — ${syncMessage}` : ""}
-        </p>
       </header>
 
       <section>
         {currentPage === 1 ? (
+          <KeySignatureExercise
+            initialClef={draft.keySignature.clef}
+            initialNotes={draft.keySignature.notes}
+            initialResult={draft.keySignature.result}
+            onDraftChange={handleKeySignatureDraftChange}
+          />
+        ) : currentPage === 2 ? (
+          <KeySignatureExercise
+            initialClef={draft.keySignatureCMinor.clef}
+            initialNotes={draft.keySignatureCMinor.notes}
+            initialResult={draft.keySignatureCMinor.result}
+            onDraftChange={handleCMinorKeySignatureDraftChange}
+            prompt="Place the correct accidentals for the C minor key signature."
+            keySignatureId="c-minor"
+          />
+        ) : currentPage === 3 ? (
           <ScaleExercise
             initialClef={draft.scale.clef}
             initialNotes={draft.scale.notes}
             initialResult={draft.scale.result}
             onDraftChange={handleScaleDraftChange}
           />
+        ) : currentPage === 4 ? (
+          <ScaleExercise
+            initialClef={draft.scaleBMinor.clef}
+            initialNotes={draft.scaleBMinor.notes}
+            initialResult={draft.scaleBMinor.result}
+            onDraftChange={handleBMinorScaleDraftChange}
+            prompt="Enter the B natural minor scale in order."
+            scaleId="b-minor"
+          />
         ) : (
-          <KeySignatureExercise
-            initialClef={draft.keySignature.clef}
-            initialNotes={draft.keySignature.notes}
-            initialResult={draft.keySignature.result}
-            onDraftChange={handleKeySignatureDraftChange}
+          <IdentifyKeySignaturesExercise
+            initialAnswers={draft.identifyKeySignatures.answers}
+            initialResult={draft.identifyKeySignatures.result}
+            onDraftChange={handleIdentifyKeySignaturesDraftChange}
           />
         )}
       </section>
@@ -225,30 +309,8 @@ export default function ExamPage() {
         onPrevious={handlePrevious}
         onNext={handleNext}
         onFinish={handleFinish}
-        finishDisabled={!canFinish || draft.submitted}
+        finishDisabled={!canFinish}
       />
-
-      {(summaryOpen || draft.submitted) && (
-        <section className={styles.summary}>
-          <h3>Exam Summary</h3>
-          <p>
-            Submission Type:{" "}
-            {draft.autoSubmitted ? "Auto-submit" : "Manual submit"}
-          </p>
-          <p>Scale Score: {draft.scale.result?.score ?? 0}%</p>
-          <p>Key Signature Score: {draft.keySignature.result?.score ?? 0}%</p>
-          <p>
-            <strong>Overall Score: {totalScore ?? 0}%</strong>
-          </p>
-          <button
-            type="button"
-            className={styles.newAttempt}
-            onClick={startNewAttempt}
-          >
-            Start New Attempt
-          </button>
-        </section>
-      )}
     </main>
   );
 }

@@ -21,6 +21,20 @@ export function createEmptyDraft(now = Date.now()): ExamDraft {
       notes: [],
       result: null,
     },
+    scaleBMinor: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
+    keySignatureCMinor: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
+    identifyKeySignatures: {
+      answers: [],
+      result: null,
+    },
   };
 }
 
@@ -53,6 +67,26 @@ export function sanitizeDraft(input: unknown): ExamDraft {
         ? draft.keySignature.notes
         : [],
       result: draft.keySignature?.result ?? null,
+    },
+    scaleBMinor: {
+      clef: draft.scaleBMinor?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.scaleBMinor?.notes) ? draft.scaleBMinor.notes : [],
+      result: draft.scaleBMinor?.result ?? null,
+    },
+    keySignatureCMinor: {
+      clef: draft.keySignatureCMinor?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.keySignatureCMinor?.notes)
+        ? draft.keySignatureCMinor.notes
+        : [],
+      result: draft.keySignatureCMinor?.result ?? null,
+    },
+    identifyKeySignatures: {
+      answers: Array.isArray(draft.identifyKeySignatures?.answers)
+        ? draft.identifyKeySignatures.answers.filter(
+            (value): value is string => typeof value === "string",
+          )
+        : [],
+      result: draft.identifyKeySignatures?.result ?? null,
     },
   };
 }

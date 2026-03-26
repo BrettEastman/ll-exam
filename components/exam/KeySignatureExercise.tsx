@@ -13,7 +13,10 @@ import {
   lineIndexFromSvgClickY,
 } from "@/features/notation/interaction/mapping";
 import { drawStaff } from "@/features/notation/render/drawStaff";
-import { gradeDKeySignatureAttempt } from "@/features/notation/grading/gradeKeySignature";
+import {
+  gradeCMinorKeySignatureAttempt,
+  gradeDKeySignatureAttempt,
+} from "@/features/notation/grading/gradeKeySignature";
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
 import type {
   KeySignatureDraftNote,
@@ -36,6 +39,8 @@ interface KeySignatureExerciseProps {
     notes: KeySignatureDraftNote[];
     result: SectionResult | null;
   }) => void;
+  prompt?: string;
+  keySignatureId?: "d-major" | "c-minor";
 }
 
 export default function KeySignatureExercise({
@@ -43,6 +48,8 @@ export default function KeySignatureExercise({
   initialNotes = [],
   initialResult = null,
   onDraftChange,
+  prompt = "Place the correct accidentals for the D major key signature.",
+  keySignatureId = "d-major",
 }: KeySignatureExerciseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<PlacedAccidental[]>(
@@ -152,7 +159,10 @@ export default function KeySignatureExercise({
 
   const grade = () => {
     const student = placed.map((item) => `${item.note}${item.type}`);
-    const result = gradeDKeySignatureAttempt(clef, student);
+    const result =
+      keySignatureId === "c-minor"
+        ? gradeCMinorKeySignatureAttempt(clef, student)
+        : gradeDKeySignatureAttempt(clef, student);
     setScore(result.score);
     setSubmittedAt(Date.now());
     setSubmitted(true);
@@ -169,17 +179,15 @@ export default function KeySignatureExercise({
 
   return (
     <section className={styles.wrap}>
-      <div className={styles.instructions}>
-        <p>Place the correct accidentals for the D major key signature.</p>
-        <p>Hint: D major requires two sharps (F# and C#).</p>
-      </div>
-
       <div className={styles.controls}>
         <label>
           Clef
           <select
             value={clef}
-            onChange={(e) => setClef(e.target.value as ClefType)}
+            onChange={(e) => {
+              setEraseMode(false);
+              setClef(e.target.value as ClefType);
+            }}
             disabled={submitted}
           >
             <option value="treble">Treble</option>
@@ -191,7 +199,10 @@ export default function KeySignatureExercise({
           <button
             type="button"
             className={accidental === "#" && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental("#")}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental("#");
+            }}
             disabled={submitted}
           >
             Sharp
@@ -199,7 +210,10 @@ export default function KeySignatureExercise({
           <button
             type="button"
             className={accidental === "b" && !eraseMode ? styles.active : ""}
-            onClick={() => setAccidental("b")}
+            onClick={() => {
+              setEraseMode(false);
+              setAccidental("b");
+            }}
             disabled={submitted}
           >
             Flat

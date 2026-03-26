@@ -1,6 +1,6 @@
 import type { ExamDraft, KeySignatureDraftNote, ScaleDraftNote } from "./types";
 
-export const EXAM_ATTEMPT_SCHEMA_VERSION = 1;
+export const EXAM_ATTEMPT_SCHEMA_VERSION = 2;
 
 export interface FirestoreExamAttempt {
   version: number;
@@ -19,6 +19,20 @@ export interface FirestoreExamAttempt {
     clef: "treble" | "bass";
     notes: KeySignatureDraftNote[];
     result: ExamDraft["keySignature"]["result"];
+  };
+  scaleBMinor: {
+    clef: "treble" | "bass";
+    notes: ScaleDraftNote[];
+    result: ExamDraft["scaleBMinor"]["result"];
+  };
+  keySignatureCMinor: {
+    clef: "treble" | "bass";
+    notes: KeySignatureDraftNote[];
+    result: ExamDraft["keySignatureCMinor"]["result"];
+  };
+  identifyKeySignatures: {
+    answers: string[];
+    result: ExamDraft["identifyKeySignatures"]["result"];
   };
 }
 
@@ -46,6 +60,26 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
       clef: draft.keySignature.clef,
       notes: draft.keySignature.notes,
       result: draft.keySignature.result,
+    },
+    scaleBMinor: {
+      clef: draft.scaleBMinor.clef,
+      notes: draft.scaleBMinor.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
+      result: draft.scaleBMinor.result,
+    },
+    keySignatureCMinor: {
+      clef: draft.keySignatureCMinor.clef,
+      notes: draft.keySignatureCMinor.notes,
+      result: draft.keySignatureCMinor.result,
+    },
+    identifyKeySignatures: {
+      answers: draft.identifyKeySignatures.answers,
+      result: draft.identifyKeySignatures.result,
     },
   };
 }
@@ -117,7 +151,7 @@ export function isFirestoreExamAttempt(input: unknown): input is FirestoreExamAt
     return false;
   }
 
-  if (value.currentPage !== 1 && value.currentPage !== 2) return false;
+  if (![1, 2, 3, 4].includes(value.currentPage as number)) return false;
   if (typeof value.submitted !== "boolean" || typeof value.autoSubmitted !== "boolean") {
     return false;
   }
@@ -147,6 +181,24 @@ export function sanitizeFirestoreExamAttempt(
       clef: value.keySignature?.clef === "bass" ? "bass" : "treble",
       notes: sanitizeKeySignatureNotes(value.keySignature?.notes),
       result: sanitizeResult(value.keySignature?.result),
+    },
+    scaleBMinor: {
+      clef: value.scaleBMinor?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeScaleNotes(value.scaleBMinor?.notes),
+      result: sanitizeResult(value.scaleBMinor?.result),
+    },
+    keySignatureCMinor: {
+      clef: value.keySignatureCMinor?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeKeySignatureNotes(value.keySignatureCMinor?.notes),
+      result: sanitizeResult(value.keySignatureCMinor?.result),
+    },
+    identifyKeySignatures: {
+      answers: Array.isArray(value.identifyKeySignatures?.answers)
+        ? value.identifyKeySignatures.answers.filter(
+            (answer): answer is string => typeof answer === "string",
+          )
+        : fallback.identifyKeySignatures.answers,
+      result: sanitizeResult(value.identifyKeySignatures?.result),
     },
   };
 }

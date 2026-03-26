@@ -3,11 +3,6 @@
   gap: 1rem;
 }
 
-.instructions p {
-  margin: 0;
-  color: var(--color-muted);
-}
-
 .controls {
   display: flex;
   flex-wrap: wrap;

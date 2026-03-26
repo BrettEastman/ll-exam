@@ -1,8 +1,13 @@
-import { D_MAJOR_KEYSIG_BY_CLEF } from "../model/constants";
+import {
+  C_MINOR_KEYSIG_BY_CLEF,
+  D_MAJOR_KEYSIG_BY_CLEF,
+} from "../model/constants";
 import type { ClefType, GradeResult } from "../model/types";
 
-export function gradeDKeySignatureAttempt(clef: ClefType, input: string[]): GradeResult {
-  const expected = D_MAJOR_KEYSIG_BY_CLEF[clef];
+function gradeAgainstExpected(
+  expected: readonly string[],
+  input: string[]
+): GradeResult {
   const result: GradeResult = {
     correct: [],
     incorrect: [],
@@ -26,4 +31,15 @@ export function gradeDKeySignatureAttempt(clef: ClefType, input: string[]): Grad
 
   result.score = Math.round((result.correct.length / expected.length) * 100);
   return result;
+}
+
+export function gradeDKeySignatureAttempt(clef: ClefType, input: string[]): GradeResult {
+  return gradeAgainstExpected(D_MAJOR_KEYSIG_BY_CLEF[clef], input);
+}
+
+export function gradeCMinorKeySignatureAttempt(
+  clef: ClefType,
+  input: string[]
+): GradeResult {
+  return gradeAgainstExpected(C_MINOR_KEYSIG_BY_CLEF[clef], input);
 }
