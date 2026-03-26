@@ -3,6 +3,8 @@ import type { ScaleDraftNote, SectionResult } from "@/features/exam/model/types"
 
 interface ScaleExerciseProps {
   initialClef?: "treble" | "bass";
+  clef?: "treble" | "bass";
+  allowClefChange?: boolean;
   initialNotes?: ScaleDraftNote[];
   initialResult?: SectionResult | null;
   onDraftChange?: (payload: {

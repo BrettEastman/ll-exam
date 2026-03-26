@@ -170,6 +170,15 @@ export default function ExamPage() {
   );
 
   const { canFinish } = getExamProgress(draft);
+  const hasStartedNotationExercise =
+    draft.keySignature.notes.length > 0 ||
+    Boolean(draft.keySignature.result) ||
+    draft.keySignatureCMinor.notes.length > 0 ||
+    Boolean(draft.keySignatureCMinor.result) ||
+    draft.scale.notes.length > 0 ||
+    Boolean(draft.scale.result) ||
+    draft.scaleBMinor.notes.length > 0 ||
+    Boolean(draft.scaleBMinor.result);
 
   // Redirect invalid pages
   useEffect(() => {
@@ -247,6 +256,39 @@ export default function ExamPage() {
     router.push("/exam/results");
   };
 
+  const handleClefChange = (nextClef: "treble" | "bass") => {
+    patchDraft((prev) => {
+      if (prev.selectedClef === nextClef) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        selectedClef: nextClef,
+        keySignature: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        keySignatureCMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        scale: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        scaleBMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+      };
+    });
+  };
+
   return (
     <main className={styles.examPage}>
       <header className={styles.header}>
@@ -259,12 +301,34 @@ export default function ExamPage() {
         </div>
         <p className={styles.description}>{currentExam.description}</p>
         <p className={styles.timer}>Time Remaining: {timer.label}</p>
+        {currentPage === 1 && (
+          <div className={styles.clefSelectRow}>
+            <label>
+              Staff clef for notation sections
+              <select
+                value={draft.selectedClef}
+                onChange={(event) =>
+                  handleClefChange(event.target.value as "treble" | "bass")
+                }
+                disabled={hasStartedNotationExercise}
+              >
+                <option value="treble">Treble Clef</option>
+                <option value="bass">Bass Clef</option>
+              </select>
+            </label>
+            <p className={styles.clefHint}>
+              This applies to both key signature and scale notation exercises.
+            </p>
+          </div>
+        )}
       </header>
 
       <section>
         {currentPage === 1 ? (
           <KeySignatureExercise
             initialClef={draft.keySignature.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.keySignature.notes}
             initialResult={draft.keySignature.result}
             onDraftChange={handleKeySignatureDraftChange}
@@ -272,6 +336,8 @@ export default function ExamPage() {
         ) : currentPage === 2 ? (
           <KeySignatureExercise
             initialClef={draft.keySignatureCMinor.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.keySignatureCMinor.notes}
             initialResult={draft.keySignatureCMinor.result}
             onDraftChange={handleCMinorKeySignatureDraftChange}
@@ -281,6 +347,8 @@ export default function ExamPage() {
         ) : currentPage === 3 ? (
           <ScaleExercise
             initialClef={draft.scale.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.scale.notes}
             initialResult={draft.scale.result}
             onDraftChange={handleScaleDraftChange}
@@ -288,6 +356,8 @@ export default function ExamPage() {
         ) : currentPage === 4 ? (
           <ScaleExercise
             initialClef={draft.scaleBMinor.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.scaleBMinor.notes}
             initialResult={draft.scaleBMinor.result}
             onDraftChange={handleBMinorScaleDraftChange}
@@ -299,6 +369,7 @@ export default function ExamPage() {
             initialAnswers={draft.identifyKeySignatures.answers}
             initialResult={draft.identifyKeySignatures.result}
             onDraftChange={handleIdentifyKeySignaturesDraftChange}
+            clef={draft.selectedClef}
           />
         )}
       </section>

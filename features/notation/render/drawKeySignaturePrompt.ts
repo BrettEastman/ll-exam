@@ -4,13 +4,14 @@ import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
 interface DrawKeySignaturePromptOptions {
   container: HTMLDivElement;
   keySpec: string;
+  clef?: "treble" | "bass";
   width?: number;
 }
 
 export async function drawKeySignaturePrompt(
   options: DrawKeySignaturePromptOptions,
 ): Promise<void> {
-  const { container, keySpec, width = 270 } = options;
+  const { container, keySpec, clef = "treble", width = 270 } = options;
 
   await ensureVexFlowFonts();
   container.innerHTML = "";
@@ -20,7 +21,7 @@ export async function drawKeySignaturePrompt(
 
   const context = renderer.getContext();
   const stave = new Stave(8, 26, width - 16);
-  stave.addClef("treble");
+  stave.addClef(clef);
   stave.addKeySignature(keySpec);
   stave.setContext(context).draw();
 }

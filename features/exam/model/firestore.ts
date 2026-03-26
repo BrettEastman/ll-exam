@@ -1,6 +1,6 @@
 import type { ExamDraft, KeySignatureDraftNote, ScaleDraftNote } from "./types";
 
-export const EXAM_ATTEMPT_SCHEMA_VERSION = 2;
+export const EXAM_ATTEMPT_SCHEMA_VERSION = 3;
 
 export interface FirestoreExamAttempt {
   version: number;
@@ -8,6 +8,7 @@ export interface FirestoreExamAttempt {
   startedAt: number;
   updatedAt: number;
   currentPage: number;
+  selectedClef?: "treble" | "bass";
   submitted: boolean;
   autoSubmitted: boolean;
   scale: {
@@ -43,6 +44,7 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
     startedAt: draft.startedAt,
     updatedAt: draft.updatedAt,
     currentPage: draft.currentPage,
+    selectedClef: draft.selectedClef,
     submitted: draft.submitted,
     autoSubmitted: draft.autoSubmitted,
     scale: {
@@ -151,7 +153,7 @@ export function isFirestoreExamAttempt(input: unknown): input is FirestoreExamAt
     return false;
   }
 
-  if (![1, 2, 3, 4].includes(value.currentPage as number)) return false;
+  if (![1, 2, 3, 4, 5].includes(value.currentPage as number)) return false;
   if (typeof value.submitted !== "boolean" || typeof value.autoSubmitted !== "boolean") {
     return false;
   }
@@ -165,11 +167,22 @@ export function sanitizeFirestoreExamAttempt(
 ): ExamDraft {
   if (!isFirestoreExamAttempt(input)) return fallback;
   const value = input as FirestoreExamAttempt;
+  const inferredSelectedClef =
+    value.scale?.clef === "bass" ||
+    value.keySignature?.clef === "bass" ||
+    value.scaleBMinor?.clef === "bass" ||
+    value.keySignatureCMinor?.clef === "bass"
+      ? "bass"
+      : "treble";
 
   return {
     startedAt: value.startedAt,
     updatedAt: value.updatedAt,
     currentPage: value.currentPage,
+    selectedClef:
+      value.selectedClef === "bass" || value.selectedClef === "treble"
+        ? value.selectedClef
+        : inferredSelectedClef,
     submitted: value.submitted,
     autoSubmitted: value.autoSubmitted,
     scale: {

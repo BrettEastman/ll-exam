@@ -25,6 +25,7 @@ describe("toFirestoreExamAttempt", () => {
     expect(payload.version).toBe(EXAM_ATTEMPT_SCHEMA_VERSION);
     expect(payload.status).toBe("submitted");
     expect(payload.currentPage).toBe(4);
+    expect(payload.selectedClef).toBe("treble");
     expect(payload.scale.notes).toEqual(draft.scale.notes);
     expect(payload.scaleBMinor.notes).toEqual(draft.scaleBMinor.notes);
     expect(payload.keySignatureCMinor.notes).toEqual(draft.keySignatureCMinor.notes);
@@ -56,6 +57,7 @@ describe("isFirestoreExamAttempt", () => {
       startedAt: 1,
       updatedAt: 2,
       currentPage: 1,
+      selectedClef: "treble",
       submitted: false,
       autoSubmitted: false,
       scale: { clef: "treble", notes: [], result: null },
@@ -75,6 +77,7 @@ describe("isFirestoreExamAttempt", () => {
         startedAt: 1,
         updatedAt: 2,
         currentPage: 5,
+        selectedClef: "treble",
         submitted: false,
         autoSubmitted: false,
       })
@@ -92,6 +95,7 @@ describe("sanitizeFirestoreExamAttempt", () => {
         startedAt: 10,
         updatedAt: 20,
         currentPage: 4,
+        selectedClef: "bass",
         submitted: true,
         autoSubmitted: false,
         scale: {
@@ -123,6 +127,7 @@ describe("sanitizeFirestoreExamAttempt", () => {
     );
 
     expect(sanitized.scale.clef).toBe("bass");
+    expect(sanitized.selectedClef).toBe("bass");
     expect(sanitized.scale.notes).toEqual([{ key: "d/3", accidental: "#" }]);
     expect(sanitized.scale.result?.score).toBe(100);
     expect(sanitized.keySignature.notes).toEqual([{ note: "f/5", type: "#" }]);
@@ -138,5 +143,28 @@ describe("sanitizeFirestoreExamAttempt", () => {
     const fallback = createEmptyDraft(42);
     const sanitized = sanitizeFirestoreExamAttempt({ nope: true }, fallback);
     expect(sanitized).toBe(fallback);
+  });
+
+  test("infers selected clef when missing in legacy payload", () => {
+    const fallback = createEmptyDraft(42);
+    const sanitized = sanitizeFirestoreExamAttempt(
+      {
+        version: 1,
+        status: "draft",
+        startedAt: 1,
+        updatedAt: 2,
+        currentPage: 1,
+        submitted: false,
+        autoSubmitted: false,
+        scale: { clef: "bass", notes: [], result: null },
+        keySignature: { clef: "treble", notes: [], result: null },
+        scaleBMinor: { clef: "treble", notes: [], result: null },
+        keySignatureCMinor: { clef: "treble", notes: [], result: null },
+        identifyKeySignatures: { answers: [], result: null },
+      },
+      fallback,
+    );
+
+    expect(sanitized.selectedClef).toBe("bass");
   });
 });

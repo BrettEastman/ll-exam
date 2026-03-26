@@ -7,6 +7,7 @@ describe("createEmptyDraft", () => {
     expect(draft.startedAt).toBe(1234);
     expect(draft.updatedAt).toBe(1234);
     expect(draft.currentPage).toBe(1);
+    expect(draft.selectedClef).toBe("treble");
     expect(draft.scale.clef).toBe("treble");
     expect(draft.keySignature.clef).toBe("treble");
     expect(draft.scaleBMinor.clef).toBe("treble");
@@ -21,6 +22,7 @@ describe("sanitizeDraft", () => {
       startedAt: 10,
       updatedAt: 20,
       currentPage: 99,
+      selectedClef: "bass",
       submitted: 1,
       autoSubmitted: 0,
       scale: { clef: "alto", notes: [{ key: "d/4" }], result: null },
@@ -48,6 +50,7 @@ describe("sanitizeDraft", () => {
     expect(sanitized.startedAt).toBe(10);
     expect(sanitized.updatedAt).toBe(20);
     expect(sanitized.currentPage).toBe(5);
+    expect(sanitized.selectedClef).toBe("bass");
     expect(sanitized.submitted).toBe(true);
     expect(sanitized.autoSubmitted).toBe(false);
     expect(sanitized.scale.clef).toBe("treble");
@@ -60,10 +63,19 @@ describe("sanitizeDraft", () => {
   test("returns fallback draft for non-object payload", () => {
     const sanitized = sanitizeDraft(null);
     expect(sanitized.currentPage).toBe(1);
+    expect(sanitized.selectedClef).toBe("treble");
     expect(sanitized.scale.notes).toEqual([]);
     expect(sanitized.keySignature.notes).toEqual([]);
     expect(sanitized.scaleBMinor.notes).toEqual([]);
     expect(sanitized.keySignatureCMinor.notes).toEqual([]);
     expect(sanitized.identifyKeySignatures.answers).toEqual([]);
+  });
+
+  test("infers selected clef from legacy section data", () => {
+    const sanitized = sanitizeDraft({
+      scale: { clef: "bass", notes: [], result: null },
+    });
+
+    expect(sanitized.selectedClef).toBe("bass");
   });
 });
