@@ -54,29 +54,6 @@
   background: #fff;
 }
 
-.clefSelectRow {
-  margin-top: 0.75rem;
-  display: grid;
-  gap: 0.35rem;
-  max-width: 28rem;
-}
-
-.clefSelectRow label {
-  display: grid;
-  gap: 0.35rem;
-  font-weight: 600;
-}
-
-.clefSelectRow select {
-  width: 100%;
-}
-
-.clefHint {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.9rem;
-}
-
 @media (max-width: 800px) {
   .titleRow {
     flex-direction: column;
