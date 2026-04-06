@@ -19,6 +19,7 @@ export interface ExamDraft {
   startedAt: number;
   updatedAt: number;
   currentPage: number;
+  selectedClef: ClefType;
   submitted: boolean;
   autoSubmitted: boolean;
   scale: {

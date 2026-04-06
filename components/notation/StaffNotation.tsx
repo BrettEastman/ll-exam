@@ -28,6 +28,8 @@ interface PlacedNote {
 
 interface StaffNotationProps {
   initialClef?: ClefType;
+  clef?: ClefType;
+  allowClefChange?: boolean;
   initialNotes?: ScaleDraftNote[];
   initialResult?: SectionResult | null;
   onDraftChange?: (payload: {
@@ -41,6 +43,8 @@ interface StaffNotationProps {
 
 export default function StaffNotation({
   initialClef = "treble",
+  clef: forcedClef,
+  allowClefChange = true,
   initialNotes = [],
   initialResult = null,
   onDraftChange,
@@ -60,6 +64,11 @@ export default function StaffNotation({
   const [submittedAt, setSubmittedAt] = useState<number | null>(
     initialResult?.submittedAt ?? null
   );
+
+  useEffect(() => {
+    if (!forcedClef) return;
+    setClef(forcedClef);
+  }, [forcedClef]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -172,21 +181,24 @@ export default function StaffNotation({
 
   return (
     <section className={styles.wrap}>
+      <p className={styles.prompt}>{prompt}</p>
       <div className={styles.controls}>
-        <label>
-          Clef
-          <select
-            value={clef}
-            onChange={(e) => {
-              setEraseMode(false);
-              setClef(e.target.value as ClefType);
-            }}
-            disabled={isSubmitted}
-          >
-            <option value="treble">Treble</option>
-            <option value="bass">Bass</option>
-          </select>
-        </label>
+        {allowClefChange && (
+          <label>
+            Clef
+            <select
+              value={clef}
+              onChange={(e) => {
+                setEraseMode(false);
+                setClef(e.target.value as ClefType);
+              }}
+              disabled={isSubmitted}
+            >
+              <option value="treble">Treble</option>
+              <option value="bass">Bass</option>
+            </select>
+          </label>
+        )}
 
         <div className={styles.accidentals}>
           <button

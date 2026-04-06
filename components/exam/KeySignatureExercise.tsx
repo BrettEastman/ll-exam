@@ -32,6 +32,8 @@ interface PlacedAccidental {
 
 interface KeySignatureExerciseProps {
   initialClef?: ClefType;
+  clef?: ClefType;
+  allowClefChange?: boolean;
   initialNotes?: KeySignatureDraftNote[];
   initialResult?: SectionResult | null;
   onDraftChange?: (payload: {
@@ -45,6 +47,8 @@ interface KeySignatureExerciseProps {
 
 export default function KeySignatureExercise({
   initialClef = "treble",
+  clef: forcedClef,
+  allowClefChange = true,
   initialNotes = [],
   initialResult = null,
   onDraftChange,
@@ -64,6 +68,12 @@ export default function KeySignatureExercise({
     initialResult?.submittedAt ?? null
   );
   const [cursorLine, setCursorLine] = useState(2);
+
+  useEffect(() => {
+    if (!forcedClef) return;
+    setEraseMode(false);
+    setClef(forcedClef);
+  }, [forcedClef]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -179,21 +189,24 @@ export default function KeySignatureExercise({
 
   return (
     <section className={styles.wrap}>
+      <p className={styles.prompt}>{prompt}</p>
       <div className={styles.controls}>
-        <label>
-          Clef
-          <select
-            value={clef}
-            onChange={(e) => {
-              setEraseMode(false);
-              setClef(e.target.value as ClefType);
-            }}
-            disabled={submitted}
-          >
-            <option value="treble">Treble</option>
-            <option value="bass">Bass</option>
-          </select>
-        </label>
+        {allowClefChange && (
+          <label>
+            Clef
+            <select
+              value={clef}
+              onChange={(e) => {
+                setEraseMode(false);
+                setClef(e.target.value as ClefType);
+              }}
+              disabled={submitted}
+            >
+              <option value="treble">Treble</option>
+              <option value="bass">Bass</option>
+            </select>
+          </label>
+        )}
 
         <div className={styles.accidentals}>
           <button

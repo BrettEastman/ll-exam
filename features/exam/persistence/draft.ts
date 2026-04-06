@@ -9,6 +9,7 @@ export function createEmptyDraft(now = Date.now()): ExamDraft {
     startedAt: now,
     updatedAt: now,
     currentPage: 1,
+    selectedClef: "treble",
     submitted: false,
     autoSubmitted: false,
     scale: {
@@ -47,6 +48,13 @@ export function sanitizeDraft(input: unknown): ExamDraft {
     typeof draft.currentPage === "number"
       ? Math.max(1, Math.min(EXAM_TOTAL_PAGES, Math.floor(draft.currentPage)))
       : 1;
+  const inferredSelectedClef =
+    draft.scale?.clef === "bass" ||
+    draft.keySignature?.clef === "bass" ||
+    draft.scaleBMinor?.clef === "bass" ||
+    draft.keySignatureCMinor?.clef === "bass"
+      ? "bass"
+      : "treble";
 
   return {
     startedAt:
@@ -54,6 +62,10 @@ export function sanitizeDraft(input: unknown): ExamDraft {
     updatedAt:
       typeof draft.updatedAt === "number" ? draft.updatedAt : fallback.updatedAt,
     currentPage,
+    selectedClef:
+      draft.selectedClef === "bass" || draft.selectedClef === "treble"
+        ? draft.selectedClef
+        : inferredSelectedClef,
     submitted: Boolean(draft.submitted),
     autoSubmitted: Boolean(draft.autoSubmitted),
     scale: {

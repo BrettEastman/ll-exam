@@ -14,11 +14,21 @@ import {
 import { useExamTimer } from "@/features/exam/state/useExamTimer";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
+import {
+  gradeBMinorScaleAttempt,
+  gradeScaleAttempt,
+  normalizeKeyToPitchClass,
+} from "@/features/notation/grading/gradeScale";
+import {
+  gradeCMinorKeySignatureAttempt,
+  gradeDKeySignatureAttempt,
+} from "@/features/notation/grading/gradeKeySignature";
+import { gradeIdentifyKeySignaturesAttempt } from "@/features/notation/grading/gradeIdentifyKeySignatures";
 import type {
+  ExamDraft,
   KeySignatureDraftNote,
   ScaleDraftNote,
 } from "@/features/exam/model/types";
-import { getExamProgress } from "@/features/exam/model/flow";
 
 function areScaleNotesEqual(a: ScaleDraftNote[], b: ScaleDraftNote[]) {
   if (a.length !== b.length) return false;
@@ -41,6 +51,89 @@ function areKeySignatureNotesEqual(
     }
   }
   return true;
+}
+
+function finalizeDraftForSubmission(
+  draft: ExamDraft,
+  autoSubmitted: boolean,
+): ExamDraft {
+  const submittedAt = Date.now();
+
+  const scaleResult =
+    draft.scale.result ??
+    {
+      score: gradeScaleAttempt(
+        draft.scale.notes.map((note) =>
+          normalizeKeyToPitchClass(note.key, note.accidental),
+        ),
+      ).score,
+      submittedAt,
+    };
+
+  const scaleBMinorResult =
+    draft.scaleBMinor.result ??
+    {
+      score: gradeBMinorScaleAttempt(
+        draft.scaleBMinor.notes.map((note) =>
+          normalizeKeyToPitchClass(note.key, note.accidental),
+        ),
+      ).score,
+      submittedAt,
+    };
+
+  const keySignatureResult =
+    draft.keySignature.result ??
+    {
+      score: gradeDKeySignatureAttempt(
+        draft.keySignature.clef,
+        draft.keySignature.notes.map((note) => `${note.note}${note.type}`),
+      ).score,
+      submittedAt,
+    };
+
+  const keySignatureCMinorResult =
+    draft.keySignatureCMinor.result ??
+    {
+      score: gradeCMinorKeySignatureAttempt(
+        draft.keySignatureCMinor.clef,
+        draft.keySignatureCMinor.notes.map((note) => `${note.note}${note.type}`),
+      ).score,
+      submittedAt,
+    };
+
+  const identifyKeySignaturesResult =
+    draft.identifyKeySignatures.result ??
+    {
+      score: gradeIdentifyKeySignaturesAttempt(draft.identifyKeySignatures.answers)
+        .score,
+      submittedAt,
+    };
+
+  return {
+    ...draft,
+    submitted: true,
+    autoSubmitted,
+    scale: {
+      ...draft.scale,
+      result: scaleResult,
+    },
+    keySignature: {
+      ...draft.keySignature,
+      result: keySignatureResult,
+    },
+    scaleBMinor: {
+      ...draft.scaleBMinor,
+      result: scaleBMinorResult,
+    },
+    keySignatureCMinor: {
+      ...draft.keySignatureCMinor,
+      result: keySignatureCMinorResult,
+    },
+    identifyKeySignatures: {
+      ...draft.identifyKeySignatures,
+      result: identifyKeySignaturesResult,
+    },
+  };
 }
 
 export default function ExamPage() {
@@ -169,8 +262,6 @@ export default function ExamPage() {
     [patchDraft],
   );
 
-  const { canFinish } = getExamProgress(draft);
-
   // Redirect invalid pages
   useEffect(() => {
     if (
@@ -199,11 +290,7 @@ export default function ExamPage() {
   useEffect(() => {
     if (!isHydrated || draft.submitted || !timer.isExpired) return;
 
-    patchDraft((prev) => ({
-      ...prev,
-      submitted: true,
-      autoSubmitted: true,
-    }));
+    patchDraft((prev) => finalizeDraftForSubmission(prev, true));
     router.replace("/exam/results");
   }, [isHydrated, draft.submitted, timer.isExpired, patchDraft, router]);
 
@@ -239,11 +326,7 @@ export default function ExamPage() {
   };
 
   const handleFinish = () => {
-    patchDraft((prev) => ({
-      ...prev,
-      submitted: true,
-      autoSubmitted: false,
-    }));
+    patchDraft((prev) => finalizeDraftForSubmission(prev, false));
     router.push("/exam/results");
   };
 
@@ -265,6 +348,8 @@ export default function ExamPage() {
         {currentPage === 1 ? (
           <KeySignatureExercise
             initialClef={draft.keySignature.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.keySignature.notes}
             initialResult={draft.keySignature.result}
             onDraftChange={handleKeySignatureDraftChange}
@@ -272,6 +357,8 @@ export default function ExamPage() {
         ) : currentPage === 2 ? (
           <KeySignatureExercise
             initialClef={draft.keySignatureCMinor.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.keySignatureCMinor.notes}
             initialResult={draft.keySignatureCMinor.result}
             onDraftChange={handleCMinorKeySignatureDraftChange}
@@ -281,6 +368,8 @@ export default function ExamPage() {
         ) : currentPage === 3 ? (
           <ScaleExercise
             initialClef={draft.scale.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.scale.notes}
             initialResult={draft.scale.result}
             onDraftChange={handleScaleDraftChange}
@@ -288,6 +377,8 @@ export default function ExamPage() {
         ) : currentPage === 4 ? (
           <ScaleExercise
             initialClef={draft.scaleBMinor.clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
             initialNotes={draft.scaleBMinor.notes}
             initialResult={draft.scaleBMinor.result}
             onDraftChange={handleBMinorScaleDraftChange}
@@ -299,6 +390,7 @@ export default function ExamPage() {
             initialAnswers={draft.identifyKeySignatures.answers}
             initialResult={draft.identifyKeySignatures.result}
             onDraftChange={handleIdentifyKeySignaturesDraftChange}
+            clef={draft.selectedClef}
           />
         )}
       </section>
@@ -309,7 +401,6 @@ export default function ExamPage() {
         onPrevious={handlePrevious}
         onNext={handleNext}
         onFinish={handleFinish}
-        finishDisabled={!canFinish}
       />
     </main>
   );

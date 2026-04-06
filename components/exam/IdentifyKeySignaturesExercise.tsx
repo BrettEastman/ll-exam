@@ -12,12 +12,14 @@ import { drawKeySignaturePrompt } from "@/features/notation/render/drawKeySignat
 interface IdentifyKeySignaturesExerciseProps {
   initialAnswers?: string[];
   initialResult?: SectionResult | null;
+  clef?: "treble" | "bass";
   onDraftChange?: (payload: { answers: string[]; result: SectionResult | null }) => void;
 }
 
 export default function IdentifyKeySignaturesExercise({
   initialAnswers = [],
   initialResult = null,
+  clef = "treble",
   onDraftChange,
 }: IdentifyKeySignaturesExerciseProps) {
   const [answers, setAnswers] = useState<string[]>(
@@ -34,9 +36,9 @@ export default function IdentifyKeySignaturesExercise({
     IDENTIFY_KEY_SIGNATURE_PROMPTS.forEach((prompt, index) => {
       const container = staffRefs.current[index];
       if (!container) return;
-      void drawKeySignaturePrompt({ container, keySpec: prompt.keySpec });
+      void drawKeySignaturePrompt({ container, keySpec: prompt.keySpec, clef });
     });
-  }, []);
+  }, [clef]);
 
   useEffect(() => {
     if (!onDraftChange) return;

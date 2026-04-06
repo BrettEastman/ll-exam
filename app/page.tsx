@@ -3,10 +3,55 @@
 import Link from "next/link";
 import styles from "./page.module.css";
 import { useAuthSession } from "@/features/auth/state/AuthProvider";
+import { useExamDraft } from "@/features/exam/state/useExamDraft";
 
 export default function Home() {
   const { user, isReady, isConfigured } = useAuthSession();
+  const { draft, isHydrated, patchDraft } = useExamDraft();
   const canEnterExam = !isConfigured || Boolean(user?.emailVerified);
+  const hasStartedNotationExercise =
+    draft.keySignature.notes.length > 0 ||
+    Boolean(draft.keySignature.result) ||
+    draft.keySignatureCMinor.notes.length > 0 ||
+    Boolean(draft.keySignatureCMinor.result) ||
+    draft.scale.notes.length > 0 ||
+    Boolean(draft.scale.result) ||
+    draft.scaleBMinor.notes.length > 0 ||
+    Boolean(draft.scaleBMinor.result);
+
+  const handleClefChange = (nextClef: "treble" | "bass") => {
+    patchDraft((prev) => {
+      if (prev.selectedClef === nextClef) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        currentPage: 1,
+        selectedClef: nextClef,
+        keySignature: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        keySignatureCMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        scale: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        scaleBMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+      };
+    });
+  };
 
   return (
     <main className={styles.page}>
@@ -42,6 +87,24 @@ export default function Home() {
           </p>
           <p>
             <strong>Feedback:</strong> Immediate section results
+          </p>
+        </div>
+
+        <div className={styles.clefPicker}>
+          <label>
+            Notation clef
+            <select
+              value={draft.selectedClef}
+              onChange={(event) =>
+                handleClefChange(event.target.value as "treble" | "bass")
+              }
+            >
+              <option value="treble">Treble Clef</option>
+              <option value="bass">Bass Clef</option>
+            </select>
+          </label>
+          <p>
+            Choose this before starting. It applies to all notation exercises.
           </p>
         </div>
       </section>
