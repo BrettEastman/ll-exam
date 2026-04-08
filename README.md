@@ -4,9 +4,10 @@ Lydian Lab Music Theory Exam is a two-page interactive music theory placement ex
 
 ## What This App Does
 
-- Presents a timed, two-part entrance exam:
-  - **Page 1:** D major scale notation
-  - **Page 2:** D major key signature notation
+- Presents a timed, 5-page entrance exam:
+  - **Pages 1-2:** key signature notation
+  - **Pages 2-3:** scale notation
+  - **Page 5:** key signature identification
 - Uses native VexFlow rendering and interaction for click/keyboard note entry.
 - Supports treble and bass clef notation.
 - Grades each section and shows a completion summary with overall score.
