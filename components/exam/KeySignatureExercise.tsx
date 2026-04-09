@@ -266,11 +266,6 @@ export default function KeySignatureExercise({
         />
       </div>
 
-      {score !== null && (
-        <p className={styles.result}>
-          Score: <strong>{score}%</strong>
-        </p>
-      )}
     </section>
   );
 }
