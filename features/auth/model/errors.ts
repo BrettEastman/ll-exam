@@ -16,6 +16,10 @@ export function getAuthErrorMessage(error: unknown): string {
       return "Email or password is incorrect.";
     case "auth/too-many-requests":
       return "Too many attempts. Please wait and try again.";
+    case "auth/missing-continue-uri":
+      return "Verification email could not be sent. Set an authDomain and authorized domain in Firebase.";
+    case "auth/unauthorized-continue-uri":
+      return "Verification link domain is not authorized. Add this site domain in Firebase Authentication settings.";
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
     default:

@@ -10,6 +10,17 @@ export interface AuthCredentials {
   password: string;
 }
 
+function getVerificationActionSettings() {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return {
+    url: `${window.location.origin}/auth`,
+    handleCodeInApp: false,
+  };
+}
+
 export async function registerWithEmail(credentials: AuthCredentials) {
   const auth = getFirebaseAuth();
   const result = await createUserWithEmailAndPassword(
@@ -19,7 +30,7 @@ export async function registerWithEmail(credentials: AuthCredentials) {
   );
 
   if (result.user && !result.user.emailVerified) {
-    await sendEmailVerification(result.user);
+    await sendEmailVerification(result.user, getVerificationActionSettings());
   }
 
   return result.user;
@@ -42,5 +53,5 @@ export async function resendVerificationEmail() {
     throw new Error("No authenticated user available for verification email.");
   }
 
-  await sendEmailVerification(user);
+  await sendEmailVerification(user, getVerificationActionSettings());
 }
