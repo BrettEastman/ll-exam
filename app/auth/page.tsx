@@ -13,6 +13,17 @@ import styles from "./page.module.css";
 
 type AuthMode = "login" | "register";
 
+function getInboxHint(email: string): string {
+  const atIndex = email.indexOf("@");
+  const domain = atIndex >= 0 ? email.slice(atIndex + 1).trim() : "";
+
+  if (!domain) {
+    return "Check your inbox (and spam) for a verification email.";
+  }
+
+  return `Check your inbox at ${domain} (and spam) for a verification email.`;
+}
+
 export default function AuthPage() {
   const { user, isReady, isConfigured, refreshUser, signOut } =
     useAuthSession();
@@ -49,9 +60,7 @@ export default function AuthPage() {
         }
       } else {
         await registerWithEmail({ email, password });
-        setMessage(
-          "Account created. Check your inbox for a verification email.",
-        );
+        setMessage(`Account created. ${getInboxHint(email)}`);
       }
     } catch (authError) {
       setError(getAuthErrorMessage(authError));
