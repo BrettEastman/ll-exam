@@ -13,11 +13,6 @@ import {
   lineIndexFromSvgClickY,
 } from "@/features/notation/interaction/mapping";
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
-import {
-  gradeScaleAttempt,
-  gradeBMinorScaleAttempt,
-  normalizeKeyToPitchClass,
-} from "@/features/notation/grading/gradeScale";
 import { drawStaff } from "@/features/notation/render/drawStaff";
 import type { ScaleDraftNote, SectionResult } from "@/features/exam/model/types";
 
@@ -46,10 +41,8 @@ export default function StaffNotation({
   clef: forcedClef,
   allowClefChange = true,
   initialNotes = [],
-  initialResult = null,
   onDraftChange,
   prompt = "Enter the D major scale in order.",
-  scaleId = "d-major",
 }: StaffNotationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>(
@@ -59,11 +52,6 @@ export default function StaffNotation({
   const [accidental, setAccidental] = useState<AccidentalSymbol | null>(null);
   const [cursorLine, setCursorLine] = useState(6);
   const [eraseMode, setEraseMode] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(Boolean(initialResult));
-  const [score, setScore] = useState<number | null>(initialResult?.score ?? null);
-  const [submittedAt, setSubmittedAt] = useState<number | null>(
-    initialResult?.submittedAt ?? null
-  );
 
   useEffect(() => {
     if (!forcedClef) return;
@@ -93,15 +81,12 @@ export default function StaffNotation({
     onDraftChange({
       clef,
       notes: placedNotes,
-      result:
-        score !== null && isSubmitted && submittedAt !== null
-          ? { score, submittedAt }
-          : null,
+      result: null,
     });
-  }, [clef, placedNotes, score, isSubmitted, submittedAt, onDraftChange]);
+  }, [clef, placedNotes, onDraftChange]);
 
   const onStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isSubmitted) return;
+    if (!containerRef.current) return;
     const svg = containerRef.current.querySelector("svg");
     if (!svg) return;
 
@@ -126,8 +111,6 @@ export default function StaffNotation({
   };
 
   const onNotationKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (isSubmitted) return;
-
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setCursorLine((line) => moveLineIndex(line, "up", clef));
@@ -157,24 +140,8 @@ export default function StaffNotation({
     }
   };
 
-  const grade = () => {
-    const actual = placedNotes.map((note) =>
-      normalizeKeyToPitchClass(note.key, note.accidental)
-    );
-    const result =
-      scaleId === "b-minor"
-        ? gradeBMinorScaleAttempt(actual)
-        : gradeScaleAttempt(actual);
-    setScore(result.score);
-    setSubmittedAt(Date.now());
-    setIsSubmitted(true);
-  };
-
   const reset = () => {
     setPlacedNotes([]);
-    setScore(null);
-    setSubmittedAt(null);
-    setIsSubmitted(false);
     setEraseMode(false);
     setAccidental(null);
   };
@@ -192,7 +159,6 @@ export default function StaffNotation({
                 setEraseMode(false);
                 setClef(e.target.value as ClefType);
               }}
-              disabled={isSubmitted}
             >
               <option value="treble">Treble</option>
               <option value="bass">Bass</option>
@@ -208,7 +174,6 @@ export default function StaffNotation({
               setEraseMode(false);
               setAccidental(null);
             }}
-            disabled={isSubmitted}
           >
             None
           </button>
@@ -219,7 +184,6 @@ export default function StaffNotation({
               setEraseMode(false);
               setAccidental("#");
             }}
-            disabled={isSubmitted}
           >
             Sharp
           </button>
@@ -230,7 +194,6 @@ export default function StaffNotation({
               setEraseMode(false);
               setAccidental("b");
             }}
-            disabled={isSubmitted}
           >
             Flat
           </button>
@@ -241,31 +204,22 @@ export default function StaffNotation({
               setEraseMode(false);
               setAccidental("n");
             }}
-            disabled={isSubmitted}
           >
             Natural
           </button>
         </div>
 
-        {!isSubmitted && (
-          <button
-            type="button"
-            onClick={() => setEraseMode((prev) => !prev)}
-            className={eraseMode ? styles.eraseActive : ""}
-          >
-            {eraseMode ? "Erase Mode" : "Erase"}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setEraseMode((prev) => !prev)}
+          className={eraseMode ? styles.eraseActive : ""}
+        >
+          {eraseMode ? "Erase Mode" : "Erase"}
+        </button>
 
-        {!isSubmitted ? (
-          <button type="button" onClick={grade} disabled={placedNotes.length === 0}>
-            Submit Scale ({placedNotes.length}/{SCALE_NOTES_MAX})
-          </button>
-        ) : (
-          <button type="button" onClick={reset}>
-            Try Again
-          </button>
-        )}
+        <button type="button" onClick={reset} disabled={placedNotes.length === 0}>
+          Clear Notes ({placedNotes.length}/{SCALE_NOTES_MAX})
+        </button>
       </div>
 
       <div className={styles.canvasWrap}>
@@ -279,12 +233,6 @@ export default function StaffNotation({
           aria-label="Scale notation staff"
         />
       </div>
-
-      {score !== null && (
-        <p className={styles.result}>
-          Score: <strong>{score}%</strong>
-        </p>
-      )}
     </section>
   );
 }

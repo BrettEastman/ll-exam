@@ -136,6 +136,92 @@ function finalizeDraftForSubmission(
   };
 }
 
+function submitPageDraft(draft: ExamDraft, page: number): ExamDraft {
+  const submittedAt = Date.now();
+
+  if (page === 1) {
+    return {
+      ...draft,
+      keySignature: {
+        ...draft.keySignature,
+        result: {
+          score: gradeDKeySignatureAttempt(
+            draft.keySignature.clef,
+            draft.keySignature.notes.map((note) => `${note.note}${note.type}`),
+          ).score,
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  if (page === 2) {
+    return {
+      ...draft,
+      keySignatureCMinor: {
+        ...draft.keySignatureCMinor,
+        result: {
+          score: gradeCMinorKeySignatureAttempt(
+            draft.keySignatureCMinor.clef,
+            draft.keySignatureCMinor.notes.map((note) => `${note.note}${note.type}`),
+          ).score,
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  if (page === 3) {
+    return {
+      ...draft,
+      scale: {
+        ...draft.scale,
+        result: {
+          score: gradeScaleAttempt(
+            draft.scale.notes.map((note) =>
+              normalizeKeyToPitchClass(note.key, note.accidental),
+            ),
+          ).score,
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  if (page === 4) {
+    return {
+      ...draft,
+      scaleBMinor: {
+        ...draft.scaleBMinor,
+        result: {
+          score: gradeBMinorScaleAttempt(
+            draft.scaleBMinor.notes.map((note) =>
+              normalizeKeyToPitchClass(note.key, note.accidental),
+            ),
+          ).score,
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  if (page === 5) {
+    return {
+      ...draft,
+      identifyKeySignatures: {
+        ...draft.identifyKeySignatures,
+        result: {
+          score: gradeIdentifyKeySignaturesAttempt(draft.identifyKeySignatures.answers)
+            .score,
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  return draft;
+}
+
 export default function ExamPage() {
   const params = useParams();
   const router = useRouter();
@@ -314,6 +400,7 @@ export default function ExamPage() {
   const currentExam = EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
 
   const handleNext = () => {
+    patchDraft((prev) => submitPageDraft(prev, currentPage));
     if (currentPage < EXAM_TOTAL_PAGES) {
       router.push(`/exam/${currentPage + 1}`);
     }
@@ -326,7 +413,7 @@ export default function ExamPage() {
   };
 
   const handleFinish = () => {
-    patchDraft((prev) => finalizeDraftForSubmission(prev, false));
+    patchDraft((prev) => finalizeDraftForSubmission(submitPageDraft(prev, currentPage), false));
     router.push("/exam/results");
   };
 
@@ -347,48 +434,46 @@ export default function ExamPage() {
       <section>
         {currentPage === 1 ? (
           <KeySignatureExercise
+            key="page-1-key-signature"
             initialClef={draft.keySignature.clef}
             clef={draft.selectedClef}
             allowClefChange={false}
             initialNotes={draft.keySignature.notes}
-            initialResult={draft.keySignature.result}
             onDraftChange={handleKeySignatureDraftChange}
           />
         ) : currentPage === 2 ? (
           <KeySignatureExercise
+            key="page-2-key-signature"
             initialClef={draft.keySignatureCMinor.clef}
             clef={draft.selectedClef}
             allowClefChange={false}
             initialNotes={draft.keySignatureCMinor.notes}
-            initialResult={draft.keySignatureCMinor.result}
             onDraftChange={handleCMinorKeySignatureDraftChange}
             prompt="Place the correct accidentals for the C minor key signature."
-            keySignatureId="c-minor"
           />
         ) : currentPage === 3 ? (
           <ScaleExercise
+            key="page-3-scale"
             initialClef={draft.scale.clef}
             clef={draft.selectedClef}
             allowClefChange={false}
             initialNotes={draft.scale.notes}
-            initialResult={draft.scale.result}
             onDraftChange={handleScaleDraftChange}
           />
         ) : currentPage === 4 ? (
           <ScaleExercise
+            key="page-4-scale"
             initialClef={draft.scaleBMinor.clef}
             clef={draft.selectedClef}
             allowClefChange={false}
             initialNotes={draft.scaleBMinor.notes}
-            initialResult={draft.scaleBMinor.result}
             onDraftChange={handleBMinorScaleDraftChange}
             prompt="Enter the B natural minor scale in order."
-            scaleId="b-minor"
           />
         ) : (
           <IdentifyKeySignaturesExercise
+            key="page-5-identify"
             initialAnswers={draft.identifyKeySignatures.answers}
-            initialResult={draft.identifyKeySignatures.result}
             onDraftChange={handleIdentifyKeySignaturesDraftChange}
             clef={draft.selectedClef}
           />
