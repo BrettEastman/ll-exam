@@ -14,10 +14,24 @@ describe("gradeDKeySignatureAttempt", () => {
 
   test("tracks incorrect and missing entries for bass clef", () => {
     const result = gradeDKeySignatureAttempt("bass", ["f/3#", "c/4#"]);
-    expect(result.score).toBe(50);
-    expect(result.correct).toEqual(["f/3#"]);
+    expect(result.score).toBe(0);
+    expect(result.correct).toEqual([]);
     expect(result.incorrect).toEqual(["c/4#"]);
     expect(result.missing).toEqual(["c/3#"]);
+  });
+
+  test("returns zero when extra accidentals are submitted", () => {
+    const result = gradeDKeySignatureAttempt("treble", [
+      "f/5#",
+      "c/5#",
+      "g/5#",
+      "d/5#",
+    ]);
+
+    expect(result.score).toBe(0);
+    expect(result.correct).toEqual([]);
+    expect(result.incorrect).toEqual(["g/5#", "d/5#"]);
+    expect(result.missing).toEqual([]);
   });
 });
 

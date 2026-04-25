@@ -18,6 +18,11 @@
   margin: 0;
 }
 
+.card h2,
+.card h3 {
+  margin: 0;
+}
+
 .meta {
   color: var(--color-muted);
 }
@@ -72,4 +77,42 @@
 .secondaryAction:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.reviewList {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.reviewCard {
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.reviewScore {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.reviewLabel {
+  margin-top: 0.2rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.answerList {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.reviewMeta {
+  color: var(--color-muted);
+  font-size: 0.92rem;
 }

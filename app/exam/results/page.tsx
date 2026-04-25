@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
 import { getExamProgress } from "@/features/exam/model/flow";
+import { buildExamReview } from "@/features/exam/model/review";
 import { clearDraft } from "@/features/exam/persistence/draft";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import { useAuthSession } from "@/features/auth/state/AuthProvider";
@@ -17,6 +18,7 @@ export default function ExamResultsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const { totalScore } = getExamProgress(draft);
+  const reviewSections = buildExamReview(draft);
 
   useEffect(() => {
     if (!access.isReady) return;
@@ -89,6 +91,49 @@ export default function ExamResultsPage() {
           )}
         </div>
         {signOutError && <p className={styles.meta}>{signOutError}</p>}
+      </section>
+
+      <section className={styles.card}>
+        <h2>Answer Review</h2>
+        <p className={styles.meta}>
+          Your original responses are shown first, followed by the expected answer key.
+        </p>
+
+        <div className={styles.reviewList}>
+          {reviewSections.map((section) => (
+            <article key={section.id} className={styles.reviewCard}>
+              <h3>{section.title}</h3>
+              <p className={styles.reviewScore}>
+                {section.correctCount}/{section.totalCount} correct
+              </p>
+
+              <p className={styles.reviewLabel}>Your answers</p>
+              <ol className={styles.answerList}>
+                {section.studentAnswers.map((answer, index) => (
+                  <li key={`${section.id}-student-${index}`}>{answer}</li>
+                ))}
+              </ol>
+
+              <p className={styles.reviewLabel}>Correct answers</p>
+              <ol className={styles.answerList}>
+                {section.correctAnswers.map((answer, index) => (
+                  <li key={`${section.id}-correct-${index}`}>{answer}</li>
+                ))}
+              </ol>
+
+              {section.incorrectAnswers.length > 0 && (
+                <p className={styles.reviewMeta}>
+                  Incorrect submitted: {section.incorrectAnswers.join(", ")}
+                </p>
+              )}
+              {section.missingAnswers.length > 0 && (
+                <p className={styles.reviewMeta}>
+                  Missing expected: {section.missingAnswers.join(", ")}
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );
