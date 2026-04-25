@@ -69,7 +69,6 @@ export default function IdentifyKeySignaturesExercise({
                 type="text"
                 value={answers[index] ?? ""}
                 onChange={(event) => onChange(index, event.target.value)}
-                placeholder={`e.g. ${prompt.tonic} ${prompt.mode}`}
               />
               <span>{prompt.mode}</span>
             </label>

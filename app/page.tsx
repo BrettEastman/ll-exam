@@ -9,7 +9,7 @@ export default function Home() {
   const { user, isReady, isConfigured } = useAuthSession();
   const { draft, isHydrated, patchDraft } = useExamDraft();
   const canEnterExam = !isConfigured || Boolean(user?.emailVerified);
-  const hasStartedNotationExercise =
+  const hasStartedExam =
     draft.keySignature.notes.length > 0 ||
     Boolean(draft.keySignature.result) ||
     draft.keySignatureCMinor.notes.length > 0 ||
@@ -17,7 +17,9 @@ export default function Home() {
     draft.scale.notes.length > 0 ||
     Boolean(draft.scale.result) ||
     draft.scaleBMinor.notes.length > 0 ||
-    Boolean(draft.scaleBMinor.result);
+    Boolean(draft.scaleBMinor.result) ||
+    draft.identifyKeySignatures.answers.some((answer) => answer.trim().length > 0) ||
+    Boolean(draft.identifyKeySignatures.result);
 
   const handleClefChange = (nextClef: "treble" | "bass") => {
     patchDraft((prev) => {
@@ -57,25 +59,35 @@ export default function Home() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <p className={styles.kicker}>Lydian Lab</p>
-        <h1>Lydian Lab Music Theory Entrance Exam</h1>
+        <h1>Lydian Lab Music Theory Exam Demo</h1>
         <p>
-          A two-part notation assessment for class placement. The exam focuses
-          on scale construction and key signature fluency.
+          This example app simulates a timed online placement exam with VexFlow
+          notation input, autosave, and final-score-only grading.
         </p>
       </section>
 
       <section className={styles.card}>
-        <h2>Exam Structure</h2>
+        <h2>What to Expect</h2>
         <div className={styles.grid}>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 1</p>
-            <h3>Scale Notation</h3>
-            <p>Enter the D major scale using correct accidentals and order.</p>
+            <h3>Key Signature Notation</h3>
+            <p>Place the correct accidentals on the staff for two prompts.</p>
           </article>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 2</p>
-            <h3>Key Signature Notation</h3>
-            <p>Place sharps or flats in accurate staff positions.</p>
+            <h3>Scale Notation</h3>
+            <p>Build the requested scales in order with accurate accidentals.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Section 3</p>
+            <h3>Identify Key Signatures</h3>
+            <p>Type key names using flexible formats such as Db or D flat.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Scoring</p>
+            <h3>Final Results Page</h3>
+            <p>Answers are graded when you finish; no per-question score is shown.</p>
           </article>
         </div>
         <div className={styles.facts}>
@@ -83,10 +95,13 @@ export default function Home() {
             <strong>Time Limit:</strong> 60 minutes
           </p>
           <p>
-            <strong>Save Behavior:</strong> Auto-save enabled
+            <strong>Navigation:</strong> Next saves your current page automatically
           </p>
           <p>
-            <strong>Feedback:</strong> Immediate section results
+            <strong>Save Behavior:</strong> Local draft + Firestore sync when signed in
+          </p>
+          <p>
+            <strong>Feedback:</strong> Final summary appears only after submission
           </p>
         </div>
 
@@ -104,15 +119,27 @@ export default function Home() {
             </select>
           </label>
           <p>
-            Choose this before starting. It applies to all notation exercises.
+            Choose this before starting. Changing clef resets notation answers.
           </p>
         </div>
+      </section>
+
+      <section className={styles.card}>
+        <h2>First-Time Tips</h2>
+        <ul className={styles.tips}>
+          <li>Click directly on the staff to place notes or accidentals.</li>
+          <li>Use the accidental buttons before placing each entry.</li>
+          <li>Use Erase mode to remove entries; use Previous to review pages.</li>
+          <li>Your progress is saved as you work, so you can safely navigate.</li>
+        </ul>
       </section>
 
       <div className={styles.ctaWrap}>
         {canEnterExam ? (
           <Link href="/exam/1" className={styles.cta}>
-            Start Exam
+            {isHydrated && hasStartedExam && !draft.submitted
+              ? `Resume Exam (Page ${draft.currentPage})`
+              : "Start Exam"}
           </Link>
         ) : (
           <Link href="/auth" className={styles.cta}>

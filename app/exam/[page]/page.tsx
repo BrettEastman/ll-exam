@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
+import Link from "next/link";
 import ScaleExercise from "../../../components/exam/ScaleExercise";
 import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
 import IdentifyKeySignaturesExercise from "../../../components/exam/IdentifyKeySignaturesExercise";
@@ -420,7 +421,11 @@ export default function ExamPage() {
     <main className={styles.examPage}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <h1>Lydian Lab Music Theory Exam</h1>
+          <h1>
+            <Link href="/" className={styles.homeLink}>
+              Lydian Lab Music Theory Exam
+            </Link>
+          </h1>
           <p className={styles.timer}>Time Remaining: {timer.label}</p>
         </div>
         <div className={styles.titleRow}>
