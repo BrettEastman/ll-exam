@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { useExamAccess } from "@/features/exam/state/useExamAccess";
 import { getExamProgress } from "@/features/exam/model/flow";
 import { clearDraft } from "@/features/exam/persistence/draft";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
+import { useAuthSession } from "@/features/auth/state/AuthProvider";
 
 export default function ExamResultsPage() {
   const router = useRouter();
   const { draft, isHydrated } = useExamDraft();
   const access = useExamAccess();
+  const { user, isReady: isAuthReady, isConfigured, signOut } = useAuthSession();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const { totalScore } = getExamProgress(draft);
 
   useEffect(() => {
@@ -30,6 +34,20 @@ export default function ExamResultsPage() {
     clearDraft();
     router.push("/exam/1");
     router.refresh();
+  };
+
+  const handleSignOut = async () => {
+    setSignOutError(null);
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      router.push("/");
+      router.refresh();
+    } catch {
+      setSignOutError("Could not sign out right now. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   if (!isHydrated) {
@@ -55,9 +73,22 @@ export default function ExamResultsPage() {
         <p className={styles.total}>
           <strong>Overall Score: {totalScore ?? 0}%</strong>
         </p>
-        <button type="button" className={styles.button} onClick={startNewAttempt}>
-          Start New Attempt
-        </button>
+        <div className={styles.actions}>
+          <button type="button" className={styles.button} onClick={startNewAttempt}>
+            Start New Attempt
+          </button>
+          {isAuthReady && isConfigured && user && (
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? "Signing Out..." : "Sign Out"}
+            </button>
+          )}
+        </div>
+        {signOutError && <p className={styles.meta}>{signOutError}</p>}
       </section>
     </main>
   );
