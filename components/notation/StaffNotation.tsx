@@ -14,7 +14,10 @@ import {
 } from "@/features/notation/interaction/mapping";
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
 import { drawStaff } from "@/features/notation/render/drawStaff";
-import type { ScaleDraftNote, SectionResult } from "@/features/exam/model/types";
+import type {
+  ScaleDraftNote,
+  SectionResult,
+} from "@/features/exam/model/types";
 
 interface PlacedNote {
   key: string;
@@ -46,7 +49,7 @@ export default function StaffNotation({
 }: StaffNotationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>(
-    initialNotes as PlacedNote[]
+    initialNotes as PlacedNote[],
   );
   const [clef, setClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalSymbol | null>(null);
@@ -217,7 +220,11 @@ export default function StaffNotation({
           {eraseMode ? "Erase Mode" : "Erase"}
         </button>
 
-        <button type="button" onClick={reset} disabled={placedNotes.length === 0}>
+        <button
+          type="button"
+          onClick={reset}
+          disabled={placedNotes.length === 0}
+        >
           Clear Notes ({placedNotes.length}/{SCALE_NOTES_MAX})
         </button>
       </div>

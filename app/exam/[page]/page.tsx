@@ -59,55 +59,46 @@ function finalizeDraftForSubmission(
 ): ExamDraft {
   const submittedAt = Date.now();
 
-  const scaleResult =
-    draft.scale.result ??
-    {
-      score: gradeScaleAttempt(
-        draft.scale.notes.map((note) =>
-          normalizeKeyToPitchClass(note.key, note.accidental),
-        ),
-      ).score,
-      submittedAt,
-    };
+  const scaleResult = draft.scale.result ?? {
+    score: gradeScaleAttempt(
+      draft.scale.notes.map((note) =>
+        normalizeKeyToPitchClass(note.key, note.accidental),
+      ),
+    ).score,
+    submittedAt,
+  };
 
-  const scaleBMinorResult =
-    draft.scaleBMinor.result ??
-    {
-      score: gradeBMinorScaleAttempt(
-        draft.scaleBMinor.notes.map((note) =>
-          normalizeKeyToPitchClass(note.key, note.accidental),
-        ),
-      ).score,
-      submittedAt,
-    };
+  const scaleBMinorResult = draft.scaleBMinor.result ?? {
+    score: gradeBMinorScaleAttempt(
+      draft.scaleBMinor.notes.map((note) =>
+        normalizeKeyToPitchClass(note.key, note.accidental),
+      ),
+    ).score,
+    submittedAt,
+  };
 
-  const keySignatureResult =
-    draft.keySignature.result ??
-    {
-      score: gradeDKeySignatureAttempt(
-        draft.keySignature.clef,
-        draft.keySignature.notes.map((note) => `${note.note}${note.type}`),
-      ).score,
-      submittedAt,
-    };
+  const keySignatureResult = draft.keySignature.result ?? {
+    score: gradeDKeySignatureAttempt(
+      draft.keySignature.clef,
+      draft.keySignature.notes.map((note) => `${note.note}${note.type}`),
+    ).score,
+    submittedAt,
+  };
 
-  const keySignatureCMinorResult =
-    draft.keySignatureCMinor.result ??
-    {
-      score: gradeCMinorKeySignatureAttempt(
-        draft.keySignatureCMinor.clef,
-        draft.keySignatureCMinor.notes.map((note) => `${note.note}${note.type}`),
-      ).score,
-      submittedAt,
-    };
+  const keySignatureCMinorResult = draft.keySignatureCMinor.result ?? {
+    score: gradeCMinorKeySignatureAttempt(
+      draft.keySignatureCMinor.clef,
+      draft.keySignatureCMinor.notes.map((note) => `${note.note}${note.type}`),
+    ).score,
+    submittedAt,
+  };
 
-  const identifyKeySignaturesResult =
-    draft.identifyKeySignatures.result ??
-    {
-      score: gradeIdentifyKeySignaturesAttempt(draft.identifyKeySignatures.answers)
-        .score,
-      submittedAt,
-    };
+  const identifyKeySignaturesResult = draft.identifyKeySignatures.result ?? {
+    score: gradeIdentifyKeySignaturesAttempt(
+      draft.identifyKeySignatures.answers,
+    ).score,
+    submittedAt,
+  };
 
   return {
     ...draft,
@@ -163,7 +154,9 @@ function submitPageDraft(draft: ExamDraft, page: number): ExamDraft {
         result: {
           score: gradeCMinorKeySignatureAttempt(
             draft.keySignatureCMinor.clef,
-            draft.keySignatureCMinor.notes.map((note) => `${note.note}${note.type}`),
+            draft.keySignatureCMinor.notes.map(
+              (note) => `${note.note}${note.type}`,
+            ),
           ).score,
           submittedAt,
         },
@@ -211,8 +204,9 @@ function submitPageDraft(draft: ExamDraft, page: number): ExamDraft {
       identifyKeySignatures: {
         ...draft.identifyKeySignatures,
         result: {
-          score: gradeIdentifyKeySignaturesAttempt(draft.identifyKeySignatures.answers)
-            .score,
+          score: gradeIdentifyKeySignaturesAttempt(
+            draft.identifyKeySignatures.answers,
+          ).score,
           submittedAt,
         },
       },
@@ -279,7 +273,8 @@ export default function ExamPage() {
         if (
           prev.scaleBMinor.clef === scaleBMinor.clef &&
           prev.scaleBMinor.result?.score === scaleBMinor.result?.score &&
-          prev.scaleBMinor.result?.submittedAt === scaleBMinor.result?.submittedAt &&
+          prev.scaleBMinor.result?.submittedAt ===
+            scaleBMinor.result?.submittedAt &&
           areScaleNotesEqual(prev.scaleBMinor.notes, scaleBMinor.notes)
         ) {
           return prev;
@@ -299,7 +294,8 @@ export default function ExamPage() {
       patchDraft((prev) => {
         if (
           prev.keySignatureCMinor.clef === keySignatureCMinor.clef &&
-          prev.keySignatureCMinor.result?.score === keySignatureCMinor.result?.score &&
+          prev.keySignatureCMinor.result?.score ===
+            keySignatureCMinor.result?.score &&
           prev.keySignatureCMinor.result?.submittedAt ===
             keySignatureCMinor.result?.submittedAt &&
           areKeySignatureNotesEqual(
@@ -397,7 +393,8 @@ export default function ExamPage() {
     return <main className={styles.examPage}>Preparing exam access...</main>;
   }
 
-  const currentExam = EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
+  const currentExam =
+    EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
 
   const handleNext = () => {
     patchDraft((prev) => submitPageDraft(prev, currentPage));
@@ -413,22 +410,25 @@ export default function ExamPage() {
   };
 
   const handleFinish = () => {
-    patchDraft((prev) => finalizeDraftForSubmission(submitPageDraft(prev, currentPage), false));
+    patchDraft((prev) =>
+      finalizeDraftForSubmission(submitPageDraft(prev, currentPage), false),
+    );
     router.push("/exam/results");
   };
 
   return (
     <main className={styles.examPage}>
       <header className={styles.header}>
-        <h1>Lydian Lab Music Theory Exam</h1>
+        <div className={styles.headerRow}>
+          <h1>Lydian Lab Music Theory Exam</h1>
+          <p className={styles.timer}>Time Remaining: {timer.label}</p>
+        </div>
         <div className={styles.titleRow}>
           <h2>{currentExam.title}</h2>
           <p>
             Page {currentPage} of {EXAM_TOTAL_PAGES}
           </p>
         </div>
-        <p className={styles.description}>{currentExam.description}</p>
-        <p className={styles.timer}>Time Remaining: {timer.label}</p>
       </header>
 
       <section>
