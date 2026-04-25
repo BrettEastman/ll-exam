@@ -15,21 +15,21 @@ function gradeAgainstExpected(
     score: 0,
   };
 
-  input.forEach((entry) => {
-    if (expected.includes(entry)) {
-      result.correct.push(entry);
-    } else {
-      result.incorrect.push(entry);
-    }
-  });
+  const exactMatch =
+    input.length === expected.length &&
+    input.every((entry) => expected.includes(entry)) &&
+    expected.every((entry) => input.includes(entry));
 
-  expected.forEach((entry) => {
-    if (!input.includes(entry)) {
-      result.missing.push(entry);
-    }
-  });
+  if (exactMatch) {
+    result.correct = [...expected];
+    result.score = 100;
+    return result;
+  }
 
-  result.score = Math.round((result.correct.length / expected.length) * 100);
+  result.incorrect = input.filter((entry) => !expected.includes(entry));
+  result.missing = expected.filter((entry) => !input.includes(entry));
+  result.correct = [];
+  result.score = 0;
   return result;
 }
 

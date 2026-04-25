@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import {
   loginWithEmail,
@@ -9,6 +10,8 @@ import {
 } from "@/features/auth/api/client";
 import { getAuthErrorMessage } from "@/features/auth/model/errors";
 import { useAuthSession } from "@/features/auth/state/AuthProvider";
+import { createEmptyDraft, saveDraft } from "@/features/exam/persistence/draft";
+import { useExamDraft } from "@/features/exam/state/useExamDraft";
 import styles from "./page.module.css";
 
 type AuthMode = "login" | "register";
@@ -25,8 +28,10 @@ function getInboxHint(email: string): string {
 }
 
 export default function AuthPage() {
+  const router = useRouter();
   const { user, isReady, isConfigured, refreshUser, signOut } =
     useAuthSession();
+  const { draft, isHydrated, patchDraft } = useExamDraft();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,6 +96,45 @@ export default function AuthPage() {
     }
   };
 
+  const onEnterExam = () => {
+    if (!isHydrated) return;
+
+    if (draft.submitted) {
+      const selectedClef = draft.selectedClef;
+      const freshDraft = {
+        ...createEmptyDraft(),
+        selectedClef,
+        scale: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+        keySignature: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+        scaleBMinor: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+        keySignatureCMinor: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+      };
+
+      saveDraft(freshDraft);
+      patchDraft(() => freshDraft);
+      router.push("/exam/1");
+      return;
+    }
+
+    router.push(`/exam/${draft.currentPage}`);
+  };
+
   if (!isReady) {
     return <main className={styles.page}>Loading account...</main>;
   }
@@ -119,9 +163,9 @@ export default function AuthPage() {
           <h1>Welcome back</h1>
           <p>You are signed in and verified. You can continue your exam now.</p>
           <div className={styles.actions}>
-            <Link href="/exam/1" className={styles.cta}>
+            <button type="button" onClick={onEnterExam} className={styles.cta}>
               Go to Exam
-            </Link>
+            </button>
             <button
               type="button"
               onClick={() => void signOut()}

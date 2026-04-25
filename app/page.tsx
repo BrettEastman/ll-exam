@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import styles from "./page.module.css";
 import { useAuthSession } from "@/features/auth/state/AuthProvider";
 import { useExamDraft } from "@/features/exam/state/useExamDraft";
 
 export default function Home() {
-  const { user, isReady, isConfigured } = useAuthSession();
+  const router = useRouter();
+  const { user, isReady, isConfigured, signOut } = useAuthSession();
   const { draft, isHydrated, patchDraft } = useExamDraft();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const canEnterExam = !isConfigured || Boolean(user?.emailVerified);
   const hasStartedExam =
     draft.keySignature.notes.length > 0 ||
@@ -53,6 +58,19 @@ export default function Home() {
         },
       };
     });
+  };
+
+  const handleSignOut = async () => {
+    setSignOutError(null);
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      router.refresh();
+    } catch {
+      setSignOutError("Could not sign out right now. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -146,7 +164,20 @@ export default function Home() {
             Sign In to Start
           </Link>
         )}
+
+        {isReady && isConfigured && user && (
+          <button
+            type="button"
+            className={styles.secondaryAction}
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+          >
+            {isSigningOut ? "Signing Out..." : "Sign Out"}
+          </button>
+        )}
       </div>
+
+      {signOutError && <p className={styles.authHint}>{signOutError}</p>}
 
       {isReady && isConfigured && !canEnterExam && (
         <p className={styles.authHint}>
