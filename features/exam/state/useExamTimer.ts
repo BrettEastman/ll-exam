@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EXAM_DURATION_SECONDS } from "../model/constants";
 
 export function useExamTimer(startedAt: number, isStopped: boolean) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (isStopped) return;

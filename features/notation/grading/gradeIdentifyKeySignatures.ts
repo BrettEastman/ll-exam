@@ -17,24 +17,19 @@ function normalizeAnswer(input: string): string {
     .replace(/\s+/g, " ");
 }
 
-function normalizeTonic(input: string): string {
-  let value = input;
-  value = value.replace(/\b([a-g])\s*flat\b/g, "$1b");
-  value = value.replace(/\b([a-g])\s*sharp\b/g, "$1#");
-  value = value.replace(/\s+/g, "");
-  return value;
-}
-
-function parseAnswer(input: string): { tonic: string; mode: "major" | "minor" | null } {
+function modeAndTonicSource(input: string): {
+  tonicSource: string;
+  mode: "major" | "minor" | null;
+} {
   const normalized = normalizeAnswer(input);
   if (!normalized) {
-    return { tonic: "", mode: null };
+    return { tonicSource: "", mode: null };
   }
 
   const compact = normalized.replace(/\s+/g, "");
   if (/^[a-g](#|b)?m$/.test(compact)) {
     return {
-      tonic: compact.slice(0, -1),
+      tonicSource: compact.slice(0, -1),
       mode: "minor",
     };
   }
@@ -44,15 +39,36 @@ function parseAnswer(input: string): { tonic: string; mode: "major" | "minor" | 
     /\bminor\b/.test(normalized) ||
     /\bmin\b/.test(normalized) ||
     /\bm\b/.test(normalized);
-  const mode = hasMajor ? "major" : hasMinor ? "minor" : null;
-  const tonicSource = normalized
-    .replace(/\bmajor\b|\bmaj\b|\bminor\b|\bmin\b|\bm\b/g, " ")
-    .trim();
 
   return {
-    tonic: normalizeTonic(tonicSource),
-    mode,
+    tonicSource: normalized
+      .replace(/\bmajor\b|\bmaj\b|\bminor\b|\bmin\b|\bm\b/g, " ")
+      .trim(),
+    mode: hasMajor ? "major" : hasMinor ? "minor" : null,
   };
+}
+
+function tonicMatchesTarget(tonicSource: string, targetTonic: string): boolean {
+  const normalized = normalizeAnswer(tonicSource)
+    .replace(/\s+/g, "")
+    .replace(/flat/g, "b")
+    .replace(/sharp/g, "#");
+
+  const letter = targetTonic[0];
+
+  if (targetTonic.endsWith("b")) {
+    return new RegExp(`^${letter}(?:b|flat)$`).test(
+      normalizeAnswer(tonicSource).replace(/\s+/g, ""),
+    ) || normalized === targetTonic;
+  }
+
+  if (targetTonic.endsWith("#")) {
+    return new RegExp(`^${letter}(?:#|sharp)$`).test(
+      normalizeAnswer(tonicSource).replace(/\s+/g, ""),
+    ) || normalized === targetTonic;
+  }
+
+  return normalized === targetTonic;
 }
 
 export function gradeIdentifyKeySignaturesAttempt(input: string[]): GradeResult {
@@ -65,8 +81,8 @@ export function gradeIdentifyKeySignaturesAttempt(input: string[]): GradeResult 
 
   IDENTIFY_KEY_SIGNATURE_PROMPTS.forEach((target, index) => {
     const raw = input[index] ?? "";
-    const answer = parseAnswer(raw);
-    const tonicMatches = answer.tonic === target.tonic;
+    const answer = modeAndTonicSource(raw);
+    const tonicMatches = tonicMatchesTarget(answer.tonicSource, target.tonic);
     const modeMatches = answer.mode === null || answer.mode === target.mode;
 
     if (tonicMatches && modeMatches) {

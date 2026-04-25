@@ -25,6 +25,39 @@ describe("gradeIdentifyKeySignaturesAttempt", () => {
     expect(result.score).toBe(100);
   });
 
+  test("accepts case-insensitive tonic variants like Db and D flat", () => {
+    const firstPromptVariants = ["Db", "db", "D flat", "d flat"];
+
+    for (const variant of firstPromptVariants) {
+      const result = gradeIdentifyKeySignaturesAttempt([
+        variant,
+        "A",
+        "F minor",
+        "C# minor",
+      ]);
+
+      expect(result.score).toBe(100);
+    }
+  });
+
+  test("accepts hyphen and symbol accidental input variants", () => {
+    const firstPromptVariants = ["D-flat", "d-flat", "D♭", "d♭", "dflat"];
+    const fourthPromptVariants = ["C sharp", "c sharp", "C-sharp", "C♯", "csharp"];
+
+    for (const dbVariant of firstPromptVariants) {
+      for (const cSharpVariant of fourthPromptVariants) {
+        const result = gradeIdentifyKeySignaturesAttempt([
+          dbVariant,
+          "A",
+          "F minor",
+          cSharpVariant,
+        ]);
+
+        expect(result.score).toBe(100);
+      }
+    }
+  });
+
   test("handles mixed and blank answers", () => {
     const result = gradeIdentifyKeySignaturesAttempt([
       "Db Major",

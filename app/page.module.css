@@ -85,6 +85,18 @@
   gap: 0.5rem;
 }
 
+.tips {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--color-muted);
+}
+
+.tips li {
+  margin: 0;
+}
+
 .facts p {
   margin: 0;
   color: var(--color-muted);

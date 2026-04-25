@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./IdentifyKeySignaturesExercise.module.css";
 import type { SectionResult } from "@/features/exam/model/types";
 import {
-  gradeIdentifyKeySignaturesAttempt,
   IDENTIFY_KEY_SIGNATURE_PROMPTS,
 } from "@/features/notation/grading/gradeIdentifyKeySignatures";
 import { drawKeySignaturePrompt } from "@/features/notation/render/drawKeySignaturePrompt";
@@ -18,17 +17,11 @@ interface IdentifyKeySignaturesExerciseProps {
 
 export default function IdentifyKeySignaturesExercise({
   initialAnswers = [],
-  initialResult = null,
   clef = "treble",
   onDraftChange,
 }: IdentifyKeySignaturesExerciseProps) {
   const [answers, setAnswers] = useState<string[]>(
     IDENTIFY_KEY_SIGNATURE_PROMPTS.map((_, index) => initialAnswers[index] ?? ""),
-  );
-  const [submitted, setSubmitted] = useState(Boolean(initialResult));
-  const [score, setScore] = useState<number | null>(initialResult?.score ?? null);
-  const [submittedAt, setSubmittedAt] = useState<number | null>(
-    initialResult?.submittedAt ?? null,
   );
   const staffRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -44,29 +37,16 @@ export default function IdentifyKeySignaturesExercise({
     if (!onDraftChange) return;
     onDraftChange({
       answers,
-      result:
-        score !== null && submitted && submittedAt !== null
-          ? { score, submittedAt }
-          : null,
+      result: null,
     });
-  }, [answers, onDraftChange, score, submitted, submittedAt]);
+  }, [answers, onDraftChange]);
 
   const onChange = (index: number, value: string) => {
     setAnswers((prev) => prev.map((entry, i) => (i === index ? value : entry)));
   };
 
-  const grade = () => {
-    const result = gradeIdentifyKeySignaturesAttempt(answers);
-    setScore(result.score);
-    setSubmittedAt(Date.now());
-    setSubmitted(true);
-  };
-
   const reset = () => {
     setAnswers(IDENTIFY_KEY_SIGNATURE_PROMPTS.map(() => ""));
-    setScore(null);
-    setSubmittedAt(null);
-    setSubmitted(false);
   };
 
   return (
@@ -89,8 +69,6 @@ export default function IdentifyKeySignaturesExercise({
                 type="text"
                 value={answers[index] ?? ""}
                 onChange={(event) => onChange(index, event.target.value)}
-                placeholder={`e.g. ${prompt.tonic} ${prompt.mode}`}
-                disabled={submitted}
               />
               <span>{prompt.mode}</span>
             </label>
@@ -99,22 +77,10 @@ export default function IdentifyKeySignaturesExercise({
       </div>
 
       <div className={styles.actions}>
-        {!submitted ? (
-          <button type="button" onClick={grade}>
-            Submit Identification
-          </button>
-        ) : (
-          <button type="button" onClick={reset}>
-            Try Again
-          </button>
-        )}
+        <button type="button" onClick={reset}>
+          Clear Answers
+        </button>
       </div>
-
-      {score !== null && (
-        <p className={styles.result}>
-          Score: <strong>{score}%</strong>
-        </p>
-      )}
     </section>
   );
 }

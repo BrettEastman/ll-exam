@@ -13,10 +13,6 @@ import {
   lineIndexFromSvgClickY,
 } from "@/features/notation/interaction/mapping";
 import { drawStaff } from "@/features/notation/render/drawStaff";
-import {
-  gradeCMinorKeySignatureAttempt,
-  gradeDKeySignatureAttempt,
-} from "@/features/notation/grading/gradeKeySignature";
 import { moveLineIndex } from "@/features/notation/interaction/keyboard";
 import type {
   KeySignatureDraftNote,
@@ -50,30 +46,18 @@ export default function KeySignatureExercise({
   clef: forcedClef,
   allowClefChange = true,
   initialNotes = [],
-  initialResult = null,
   onDraftChange,
   prompt = "Place the correct accidentals for the D major key signature.",
-  keySignatureId = "d-major",
 }: KeySignatureExerciseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<PlacedAccidental[]>(
     initialNotes as PlacedAccidental[]
   );
-  const [clef, setClef] = useState<ClefType>(initialClef);
+  const [localClef, setLocalClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalType>("#");
   const [eraseMode, setEraseMode] = useState(false);
-  const [submitted, setSubmitted] = useState(Boolean(initialResult));
-  const [score, setScore] = useState<number | null>(initialResult?.score ?? null);
-  const [submittedAt, setSubmittedAt] = useState<number | null>(
-    initialResult?.submittedAt ?? null
-  );
   const [cursorLine, setCursorLine] = useState(2);
-
-  useEffect(() => {
-    if (!forcedClef) return;
-    setEraseMode(false);
-    setClef(forcedClef);
-  }, [forcedClef]);
+  const clef = forcedClef ?? localClef;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -101,15 +85,12 @@ export default function KeySignatureExercise({
     onDraftChange({
       clef,
       notes: placed,
-      result:
-        score !== null && submitted && submittedAt !== null
-          ? { score, submittedAt }
-          : null,
+      result: null,
     });
-  }, [clef, placed, score, submitted, submittedAt, onDraftChange]);
+  }, [clef, placed, onDraftChange]);
 
   const onStaffClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || submitted) return;
+    if (!containerRef.current) return;
     const svg = containerRef.current.querySelector("svg");
     if (!svg) return;
 
@@ -135,8 +116,6 @@ export default function KeySignatureExercise({
   };
 
   const onNotationKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (submitted) return;
-
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setCursorLine((line) => moveLineIndex(line, "up", clef));
@@ -167,22 +146,8 @@ export default function KeySignatureExercise({
     }
   };
 
-  const grade = () => {
-    const student = placed.map((item) => `${item.note}${item.type}`);
-    const result =
-      keySignatureId === "c-minor"
-        ? gradeCMinorKeySignatureAttempt(clef, student)
-        : gradeDKeySignatureAttempt(clef, student);
-    setScore(result.score);
-    setSubmittedAt(Date.now());
-    setSubmitted(true);
-  };
-
   const reset = () => {
     setPlaced([]);
-    setScore(null);
-    setSubmittedAt(null);
-    setSubmitted(false);
     setEraseMode(false);
     setAccidental("#");
   };
@@ -198,9 +163,8 @@ export default function KeySignatureExercise({
               value={clef}
               onChange={(e) => {
                 setEraseMode(false);
-                setClef(e.target.value as ClefType);
+                setLocalClef(e.target.value as ClefType);
               }}
-              disabled={submitted}
             >
               <option value="treble">Treble</option>
               <option value="bass">Bass</option>
@@ -216,7 +180,6 @@ export default function KeySignatureExercise({
               setEraseMode(false);
               setAccidental("#");
             }}
-            disabled={submitted}
           >
             Sharp
           </button>
@@ -227,31 +190,22 @@ export default function KeySignatureExercise({
               setEraseMode(false);
               setAccidental("b");
             }}
-            disabled={submitted}
           >
             Flat
           </button>
         </div>
 
-        {!submitted && (
-          <button
-            type="button"
-            className={eraseMode ? styles.eraseActive : ""}
-            onClick={() => setEraseMode((prev) => !prev)}
-          >
-            {eraseMode ? "Erase Mode" : "Erase"}
-          </button>
-        )}
+        <button
+          type="button"
+          className={eraseMode ? styles.eraseActive : ""}
+          onClick={() => setEraseMode((prev) => !prev)}
+        >
+          {eraseMode ? "Erase Mode" : "Erase"}
+        </button>
 
-        {!submitted ? (
-          <button type="button" onClick={grade} disabled={placed.length === 0}>
-            Submit Key Signature
-          </button>
-        ) : (
-          <button type="button" onClick={reset}>
-            Try Again
-          </button>
-        )}
+        <button type="button" onClick={reset} disabled={placed.length === 0}>
+          Clear Notes
+        </button>
       </div>
 
       <div className={styles.canvasWrap}>
@@ -265,7 +219,6 @@ export default function KeySignatureExercise({
           aria-label="Key signature notation staff"
         />
       </div>
-
     </section>
   );
 }
