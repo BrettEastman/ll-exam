@@ -51,15 +51,11 @@ export default function StaffNotation({
   const [placedNotes, setPlacedNotes] = useState<PlacedNote[]>(
     initialNotes as PlacedNote[],
   );
-  const [clef, setClef] = useState<ClefType>(initialClef);
+  const [localClef, setLocalClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalSymbol | null>(null);
   const [cursorLine, setCursorLine] = useState(6);
   const [eraseMode, setEraseMode] = useState(false);
-
-  useEffect(() => {
-    if (!forcedClef) return;
-    setClef(forcedClef);
-  }, [forcedClef]);
+  const clef = forcedClef ?? localClef;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -160,7 +156,7 @@ export default function StaffNotation({
               value={clef}
               onChange={(e) => {
                 setEraseMode(false);
-                setClef(e.target.value as ClefType);
+                setLocalClef(e.target.value as ClefType);
               }}
             >
               <option value="treble">Treble</option>

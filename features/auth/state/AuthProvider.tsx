@@ -30,13 +30,10 @@ const AuthSessionContext = createContext<AuthSessionContextValue | undefined>(
 export function AuthProvider({ children }: { children: ReactNode }) {
   const isConfigured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(!isConfigured);
 
   useEffect(() => {
-    if (!isConfigured) {
-      setIsReady(true);
-      return;
-    }
+    if (!isConfigured) return;
 
     const auth = getFirebaseAuth();
     const unsub = onAuthStateChanged(auth, (nextUser) => {

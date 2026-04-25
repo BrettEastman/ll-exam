@@ -53,16 +53,11 @@ export default function KeySignatureExercise({
   const [placed, setPlaced] = useState<PlacedAccidental[]>(
     initialNotes as PlacedAccidental[]
   );
-  const [clef, setClef] = useState<ClefType>(initialClef);
+  const [localClef, setLocalClef] = useState<ClefType>(initialClef);
   const [accidental, setAccidental] = useState<AccidentalType>("#");
   const [eraseMode, setEraseMode] = useState(false);
   const [cursorLine, setCursorLine] = useState(2);
-
-  useEffect(() => {
-    if (!forcedClef) return;
-    setEraseMode(false);
-    setClef(forcedClef);
-  }, [forcedClef]);
+  const clef = forcedClef ?? localClef;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -168,7 +163,7 @@ export default function KeySignatureExercise({
               value={clef}
               onChange={(e) => {
                 setEraseMode(false);
-                setClef(e.target.value as ClefType);
+                setLocalClef(e.target.value as ClefType);
               }}
             >
               <option value="treble">Treble</option>
