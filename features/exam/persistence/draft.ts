@@ -32,6 +32,16 @@ export function createEmptyDraft(now = Date.now()): ExamDraft {
       notes: [],
       result: null,
     },
+    triad: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
+    triadBMinor: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
     identifyKeySignatures: {
       answers: [],
       result: null,
@@ -52,7 +62,9 @@ export function sanitizeDraft(input: unknown): ExamDraft {
     draft.scale?.clef === "bass" ||
     draft.keySignature?.clef === "bass" ||
     draft.scaleBMinor?.clef === "bass" ||
-    draft.keySignatureCMinor?.clef === "bass"
+    draft.keySignatureCMinor?.clef === "bass" ||
+    draft.triad?.clef === "bass" ||
+    draft.triadBMinor?.clef === "bass"
       ? "bass"
       : "treble";
 
@@ -91,6 +103,16 @@ export function sanitizeDraft(input: unknown): ExamDraft {
         ? draft.keySignatureCMinor.notes
         : [],
       result: draft.keySignatureCMinor?.result ?? null,
+    },
+    triad: {
+      clef: draft.triad?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.triad?.notes) ? draft.triad.notes : [],
+      result: draft.triad?.result ?? null,
+    },
+    triadBMinor: {
+      clef: draft.triadBMinor?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.triadBMinor?.notes) ? draft.triadBMinor.notes : [],
+      result: draft.triadBMinor?.result ?? null,
     },
     identifyKeySignatures: {
       answers: Array.isArray(draft.identifyKeySignatures?.answers)

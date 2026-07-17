@@ -6,6 +6,7 @@ import Link from "next/link";
 import ScaleExercise from "../../../components/exam/ScaleExercise";
 import KeySignatureExercise from "../../../components/exam/KeySignatureExercise";
 import IdentifyKeySignaturesExercise from "../../../components/exam/IdentifyKeySignaturesExercise";
+import TriadExercise from "../../../components/exam/TriadExercise";
 import ExamNavigation from "../../../components/exam/ExamNavigation";
 import styles from "./page.module.css";
 import {
@@ -25,6 +26,12 @@ import {
   gradeDKeySignatureAttempt,
 } from "@/features/notation/grading/gradeKeySignature";
 import { gradeIdentifyKeySignaturesAttempt } from "@/features/notation/grading/gradeIdentifyKeySignatures";
+import { gradeTriadAttempt } from "@/features/notation/grading/gradeTriad";
+import {
+  TRIAD_EXERCISES,
+  TRIAD_START_PAGE,
+  type TriadDraftKey,
+} from "@/features/exam/model/triads";
 import type {
   ExamDraft,
   KeySignatureDraftNote,
@@ -52,6 +59,30 @@ function areKeySignatureNotesEqual(
     }
   }
   return true;
+}
+
+function getTriadExerciseForPage(page: number) {
+  const triadIndex = page - TRIAD_START_PAGE;
+  if (triadIndex < 0 || triadIndex >= TRIAD_EXERCISES.length) {
+    return null;
+  }
+  return TRIAD_EXERCISES[triadIndex];
+}
+
+function gradeTriadDraftSection(
+  draft: ExamDraft,
+  draftKey: TriadDraftKey,
+): number {
+  const exercise = TRIAD_EXERCISES.find((item) => item.draftKey === draftKey);
+  if (!exercise) {
+    return 0;
+  }
+
+  const notes = draft[draftKey].notes.map((note) =>
+    normalizeKeyToPitchClass(note.key, note.accidental),
+  );
+
+  return gradeTriadAttempt(notes, exercise.expectedNotes).score;
 }
 
 function finalizeDraftForSubmission(
@@ -101,6 +132,20 @@ function finalizeDraftForSubmission(
     submittedAt,
   };
 
+  const triadResults = TRIAD_EXERCISES.reduce(
+    (acc, exercise) => {
+      const current = draft[exercise.draftKey];
+      acc[exercise.draftKey] =
+        current.result ??
+        ({
+          score: gradeTriadDraftSection(draft, exercise.draftKey),
+          submittedAt,
+        } as const);
+      return acc;
+    },
+    {} as Record<TriadDraftKey, NonNullable<ExamDraft["triad"]["result"]>>,
+  );
+
   return {
     ...draft,
     submitted: true,
@@ -121,6 +166,16 @@ function finalizeDraftForSubmission(
       ...draft.keySignatureCMinor,
       result: keySignatureCMinorResult,
     },
+    ...TRIAD_EXERCISES.reduce(
+      (acc, exercise) => {
+        acc[exercise.draftKey] = {
+          ...draft[exercise.draftKey],
+          result: triadResults[exercise.draftKey],
+        };
+        return acc;
+      },
+      {} as Pick<ExamDraft, TriadDraftKey>,
+    ),
     identifyKeySignatures: {
       ...draft.identifyKeySignatures,
       result: identifyKeySignaturesResult,
@@ -199,7 +254,21 @@ function submitPageDraft(draft: ExamDraft, page: number): ExamDraft {
     };
   }
 
-  if (page === 5) {
+  const triadExercise = getTriadExerciseForPage(page);
+  if (triadExercise) {
+    return {
+      ...draft,
+      [triadExercise.draftKey]: {
+        ...draft[triadExercise.draftKey],
+        result: {
+          score: gradeTriadDraftSection(draft, triadExercise.draftKey),
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  if (page === EXAM_TOTAL_PAGES) {
     return {
       ...draft,
       identifyKeySignatures: {
@@ -345,6 +414,28 @@ export default function ExamPage() {
     [patchDraft],
   );
 
+  const handleTriadSectionDraftChange = useCallback(
+    (draftKey: TriadDraftKey, value: ExamDraft[TriadDraftKey]) => {
+      patchDraft((prev) => {
+        const current = prev[draftKey];
+        if (
+          current.clef === value.clef &&
+          current.result?.score === value.result?.score &&
+          current.result?.submittedAt === value.result?.submittedAt &&
+          areScaleNotesEqual(current.notes, value.notes)
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [draftKey]: value,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
   // Redirect invalid pages
   useEffect(() => {
     if (
@@ -396,6 +487,7 @@ export default function ExamPage() {
 
   const currentExam =
     EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
+  const currentTriadExercise = getTriadExerciseForPage(currentPage);
 
   const handleNext = () => {
     patchDraft((prev) => submitPageDraft(prev, currentPage));
@@ -423,7 +515,7 @@ export default function ExamPage() {
         <div className={styles.headerRow}>
           <h1>
             <Link href="/" className={styles.homeLink}>
-              Lydian Lab Music Theory Exam
+              Music Theory Exam
             </Link>
           </h1>
           <p className={styles.timer}>Time Remaining: {timer.label}</p>
@@ -475,9 +567,24 @@ export default function ExamPage() {
             onDraftChange={handleBMinorScaleDraftChange}
             prompt="Enter the B natural minor scale in order."
           />
+        ) : currentTriadExercise ? (
+          <TriadExercise
+            key={`page-${currentPage}-${currentTriadExercise.id}`}
+            initialClef={draft[currentTriadExercise.draftKey].clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
+            initialNotes={draft[currentTriadExercise.draftKey].notes}
+            onDraftChange={(payload) =>
+              handleTriadSectionDraftChange(
+                currentTriadExercise.draftKey,
+                payload,
+              )
+            }
+            prompt={currentTriadExercise.prompt}
+          />
         ) : (
           <IdentifyKeySignaturesExercise
-            key="page-5-identify"
+            key="page-7-identify"
             initialAnswers={draft.identifyKeySignatures.answers}
             onDraftChange={handleIdentifyKeySignaturesDraftChange}
             clef={draft.selectedClef}

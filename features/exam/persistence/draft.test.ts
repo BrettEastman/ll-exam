@@ -12,6 +12,8 @@ describe("createEmptyDraft", () => {
     expect(draft.keySignature.clef).toBe("treble");
     expect(draft.scaleBMinor.clef).toBe("treble");
     expect(draft.keySignatureCMinor.clef).toBe("treble");
+    expect(draft.triad.clef).toBe("treble");
+    expect(draft.triadBMinor.clef).toBe("treble");
     expect(draft.identifyKeySignatures.answers).toEqual([]);
   });
 });
@@ -49,7 +51,7 @@ describe("sanitizeDraft", () => {
 
     expect(sanitized.startedAt).toBe(10);
     expect(sanitized.updatedAt).toBe(20);
-    expect(sanitized.currentPage).toBe(5);
+    expect(sanitized.currentPage).toBe(7);
     expect(sanitized.selectedClef).toBe("bass");
     expect(sanitized.submitted).toBe(true);
     expect(sanitized.autoSubmitted).toBe(false);
@@ -57,6 +59,8 @@ describe("sanitizeDraft", () => {
     expect(sanitized.keySignature.clef).toBe("bass");
     expect(sanitized.scaleBMinor.clef).toBe("bass");
     expect(sanitized.keySignatureCMinor.clef).toBe("treble");
+    expect(sanitized.triad.clef).toBe("treble");
+    expect(sanitized.triadBMinor.clef).toBe("treble");
     expect(sanitized.identifyKeySignatures.answers).toEqual(["db major", "a major"]);
   });
 
@@ -68,6 +72,8 @@ describe("sanitizeDraft", () => {
     expect(sanitized.keySignature.notes).toEqual([]);
     expect(sanitized.scaleBMinor.notes).toEqual([]);
     expect(sanitized.keySignatureCMinor.notes).toEqual([]);
+    expect(sanitized.triad.notes).toEqual([]);
+    expect(sanitized.triadBMinor.notes).toEqual([]);
     expect(sanitized.identifyKeySignatures.answers).toEqual([]);
   });
 

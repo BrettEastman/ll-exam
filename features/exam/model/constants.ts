@@ -1,6 +1,19 @@
-export const EXAM_TOTAL_PAGES = 5;
+import { TRIAD_EXERCISES, TRIAD_START_PAGE } from "./triads";
+
+const NON_TRIAD_PAGE_COUNT = TRIAD_START_PAGE;
+export const EXAM_TOTAL_PAGES = NON_TRIAD_PAGE_COUNT + TRIAD_EXERCISES.length;
 export const EXAM_DURATION_SECONDS = 60 * 60;
 export const EXAM_DRAFT_STORAGE_KEY = "lydianlab.exam.draft.v1";
+
+const triadPageMeta = Object.fromEntries(
+  TRIAD_EXERCISES.map((exercise, index) => [
+    TRIAD_START_PAGE + index,
+    {
+      title: "Triads Notation",
+      description: exercise.description,
+    },
+  ]),
+);
 
 export const EXAM_PAGE_META = {
   1: {
@@ -19,7 +32,8 @@ export const EXAM_PAGE_META = {
     title: "Scale Notation",
     description: "Enter the B natural minor scale notes in order.",
   },
-  5: {
+  ...triadPageMeta,
+  [EXAM_TOTAL_PAGES]: {
     title: "Identify Key Signatures",
     description: "Name each key signature shown on the staff.",
   },
