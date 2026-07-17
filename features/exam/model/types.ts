@@ -42,6 +42,16 @@ export interface ExamDraft {
     notes: KeySignatureDraftNote[];
     result: SectionResult | null;
   };
+  triad: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  };
+  triadBMinor: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  };
   identifyKeySignatures: {
     answers: string[];
     result: SectionResult | null;

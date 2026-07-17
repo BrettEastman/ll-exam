@@ -12,6 +12,10 @@ import {
   IDENTIFY_KEY_SIGNATURE_PROMPTS,
 } from "@/features/notation/grading/gradeIdentifyKeySignatures";
 import {
+  gradeTriadAttempt,
+} from "@/features/notation/grading/gradeTriad";
+import { TRIAD_EXERCISES } from "./triads";
+import {
   B_NATURAL_MINOR_SCALE,
   C_MINOR_KEYSIG_BY_CLEF,
   D_MAJOR_KEYSIG_BY_CLEF,
@@ -86,6 +90,24 @@ export function buildExamReview(draft: ExamDraft): AnswerReviewSection[] {
   );
   const bMinorScaleGrade = gradeBMinorScaleAttempt(bMinorScaleStudent);
 
+  const triadSections = TRIAD_EXERCISES.map((exercise) => {
+    const student = draft[exercise.draftKey].notes.map((note) =>
+      normalizeKeyToPitchClass(note.key, note.accidental),
+    );
+    const grade = gradeTriadAttempt(student, exercise.expectedNotes);
+
+    return {
+      id: `${exercise.id}-triad`,
+      title: exercise.title,
+      correctCount: grade.correct.length,
+      totalCount: exercise.expectedNotes.length,
+      studentAnswers: withFallback(student.map(formatPitchClass)),
+      correctAnswers: exercise.expectedNotes.map(formatPitchClass),
+      missingAnswers: grade.missing.map(formatPitchClass),
+      incorrectAnswers: grade.incorrect.map(formatPitchClass),
+    } satisfies AnswerReviewSection;
+  });
+
   const identifyStudent = IDENTIFY_KEY_SIGNATURE_PROMPTS.map(
     (_, index) => draft.identifyKeySignatures.answers[index] ?? "",
   );
@@ -135,6 +157,7 @@ export function buildExamReview(draft: ExamDraft): AnswerReviewSection[] {
       missingAnswers: bMinorScaleGrade.missing.map(formatPitchClass),
       incorrectAnswers: bMinorScaleGrade.incorrect.map(formatPitchClass),
     },
+    ...triadSections,
     {
       id: "identify-keysig",
       title: "Identify Key Signatures",

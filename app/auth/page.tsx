@@ -119,6 +119,16 @@ export default function AuthPage() {
           notes: [],
           result: null,
         },
+        triad: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+        triadBMinor: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
         keySignatureCMinor: {
           clef: selectedClef,
           notes: [],

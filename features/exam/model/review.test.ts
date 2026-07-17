@@ -7,10 +7,12 @@ describe("buildExamReview", () => {
     const draft = createEmptyDraft();
     const review = buildExamReview(draft);
 
-    expect(review).toHaveLength(5);
+    expect(review).toHaveLength(7);
     expect(review[0].studentAnswers).toEqual(["(No answer provided)"]);
     expect(review[2].studentAnswers).toEqual(["(No answer provided)"]);
-    expect(review[4].studentAnswers).toEqual([
+    expect(review[4].studentAnswers).toEqual(["(No answer provided)"]);
+    expect(review[5].studentAnswers).toEqual(["(No answer provided)"]);
+    expect(review[6].studentAnswers).toEqual([
       "(No answer provided)",
       "(No answer provided)",
       "(No answer provided)",

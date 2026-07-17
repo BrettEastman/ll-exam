@@ -23,6 +23,10 @@ export default function Home() {
     Boolean(draft.scale.result) ||
     draft.scaleBMinor.notes.length > 0 ||
     Boolean(draft.scaleBMinor.result) ||
+    draft.triad.notes.length > 0 ||
+    Boolean(draft.triad.result) ||
+    draft.triadBMinor.notes.length > 0 ||
+    Boolean(draft.triadBMinor.result) ||
     draft.identifyKeySignatures.answers.some((answer) => answer.trim().length > 0) ||
     Boolean(draft.identifyKeySignatures.result);
 
@@ -52,6 +56,16 @@ export default function Home() {
           result: null,
         },
         scaleBMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        triad: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        triadBMinor: {
           clef: nextClef,
           notes: [],
           result: null,
@@ -99,6 +113,16 @@ export default function Home() {
           </article>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 3</p>
+            <h3>Triad Notation</h3>
+            <p>Build an A major triad by stacking chord tones on one staff.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Section 4</p>
+            <h3>Triad Notation</h3>
+            <p>Build an F# minor triad by stacking chord tones on one staff.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Section 5</p>
             <h3>Identify Key Signatures</h3>
             <p>Type key names using flexible formats such as Db or D flat.</p>
           </article>

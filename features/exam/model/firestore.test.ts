@@ -19,6 +19,12 @@ describe("toFirestoreExamAttempt", () => {
       { note: "b/4", type: "b" },
       { note: "e/5", type: "b" },
     ];
+    draft.triad.notes = [{ key: "d/4" }, { key: "f/4", accidental: "#" }, { key: "a/4" }];
+    draft.triadBMinor.notes = [
+      { key: "b/3" },
+      { key: "d/4" },
+      { key: "f/4", accidental: "#" },
+    ];
     draft.identifyKeySignatures.answers = ["db major", "a major", "f minor", "c# minor"];
 
     const payload = toFirestoreExamAttempt(draft);
@@ -29,6 +35,8 @@ describe("toFirestoreExamAttempt", () => {
     expect(payload.scale.notes).toEqual(draft.scale.notes);
     expect(payload.scaleBMinor.notes).toEqual(draft.scaleBMinor.notes);
     expect(payload.keySignatureCMinor.notes).toEqual(draft.keySignatureCMinor.notes);
+    expect(payload.triad.notes).toEqual(draft.triad.notes);
+    expect(payload.triadBMinor.notes).toEqual(draft.triadBMinor.notes);
     expect(payload.identifyKeySignatures.answers).toEqual(
       draft.identifyKeySignatures.answers,
     );
@@ -64,6 +72,8 @@ describe("isFirestoreExamAttempt", () => {
       keySignature: { clef: "treble", notes: [], result: null },
       scaleBMinor: { clef: "treble", notes: [], result: null },
       keySignatureCMinor: { clef: "treble", notes: [], result: null },
+      triad: { clef: "treble", notes: [], result: null },
+      triadBMinor: { clef: "treble", notes: [], result: null },
       identifyKeySignatures: { answers: [], result: null },
     };
 
@@ -118,6 +128,16 @@ describe("sanitizeFirestoreExamAttempt", () => {
           notes: [{ note: "b/2", type: "b" }, { note: "a/2", type: "x" }],
           result: { score: 90, submittedAt: 999 },
         },
+        triad: {
+          clef: "bass",
+          notes: [{ key: "d/3" }, { key: "f/3", accidental: "#" }, { key: "a/3" }],
+          result: { score: 100, submittedAt: 1100 },
+        },
+        triadBMinor: {
+          clef: "bass",
+          notes: [{ key: "b/2" }, { key: "d/3" }, { key: "f/3", accidental: "#" }],
+          result: { score: 100, submittedAt: 1120 },
+        },
         identifyKeySignatures: {
           answers: ["db major", 12, null, "f minor"],
           result: { score: 75, submittedAt: 1200 },
@@ -136,6 +156,16 @@ describe("sanitizeFirestoreExamAttempt", () => {
       { key: "c/5", accidental: "#" },
     ]);
     expect(sanitized.keySignatureCMinor.notes).toEqual([{ note: "b/2", type: "b" }]);
+    expect(sanitized.triad.notes).toEqual([
+      { key: "d/3" },
+      { key: "f/3", accidental: "#" },
+      { key: "a/3" },
+    ]);
+    expect(sanitized.triadBMinor.notes).toEqual([
+      { key: "b/2" },
+      { key: "d/3" },
+      { key: "f/3", accidental: "#" },
+    ]);
     expect(sanitized.identifyKeySignatures.answers).toEqual(["db major", "f minor"]);
   });
 
@@ -160,6 +190,8 @@ describe("sanitizeFirestoreExamAttempt", () => {
         keySignature: { clef: "treble", notes: [], result: null },
         scaleBMinor: { clef: "treble", notes: [], result: null },
         keySignatureCMinor: { clef: "treble", notes: [], result: null },
+        triad: { clef: "treble", notes: [], result: null },
+        triadBMinor: { clef: "treble", notes: [], result: null },
         identifyKeySignatures: { answers: [], result: null },
       },
       fallback,

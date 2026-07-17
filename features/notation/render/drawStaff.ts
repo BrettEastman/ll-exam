@@ -14,6 +14,7 @@ import {
   SCALE_NOTE_X_STEP,
   STAFF_HEIGHT,
   STAFF_WIDTH,
+  TRIAD_NOTE_X,
 } from "../model/constants";
 import type { ClefType, NotationItem } from "../model/types";
 import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
@@ -22,7 +23,7 @@ export interface DrawStaffOptions {
   container: HTMLDivElement;
   clef: ClefType;
   items: NotationItem[];
-  kind: "scale" | "keysig";
+  kind: "scale" | "keysig" | "triad";
 }
 
 function accidentalGlyph(accidental: NotationItem["accidental"]): string | null {
@@ -72,6 +73,31 @@ export async function drawStaff(options: DrawStaffOptions): Promise<void> {
       glyph.renderText(context, startX + index * stepX, 0);
     });
 
+    return;
+  }
+
+  if (kind === "triad") {
+    if (items.length === 0) {
+      return;
+    }
+
+    const chord = new StaveNote({
+      clef,
+      keys: items.map((item) => item.key),
+      duration: "w",
+    });
+
+    items.forEach((item, index) => {
+      if (item.accidental) {
+        chord.addModifier(new Accidental(item.accidental), index);
+      }
+    });
+
+    const tick = new TickContext();
+    tick.addTickable(chord).preFormat().setX(TRIAD_NOTE_X);
+    chord.setStave(stave);
+    chord.setContext(context);
+    chord.draw();
     return;
   }
 

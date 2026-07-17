@@ -1,6 +1,7 @@
 import type { ExamDraft, KeySignatureDraftNote, ScaleDraftNote } from "./types";
+import { EXAM_TOTAL_PAGES } from "./constants";
 
-export const EXAM_ATTEMPT_SCHEMA_VERSION = 3;
+export const EXAM_ATTEMPT_SCHEMA_VERSION = 5;
 
 export interface FirestoreExamAttempt {
   version: number;
@@ -30,6 +31,16 @@ export interface FirestoreExamAttempt {
     clef: "treble" | "bass";
     notes: KeySignatureDraftNote[];
     result: ExamDraft["keySignatureCMinor"]["result"];
+  };
+  triad: {
+    clef: "treble" | "bass";
+    notes: ScaleDraftNote[];
+    result: ExamDraft["triad"]["result"];
+  };
+  triadBMinor: {
+    clef: "treble" | "bass";
+    notes: ScaleDraftNote[];
+    result: ExamDraft["triadBMinor"]["result"];
   };
   identifyKeySignatures: {
     answers: string[];
@@ -78,6 +89,28 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
       clef: draft.keySignatureCMinor.clef,
       notes: draft.keySignatureCMinor.notes,
       result: draft.keySignatureCMinor.result,
+    },
+    triad: {
+      clef: draft.triad.clef,
+      notes: draft.triad.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
+      result: draft.triad.result,
+    },
+    triadBMinor: {
+      clef: draft.triadBMinor.clef,
+      notes: draft.triadBMinor.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
+      result: draft.triadBMinor.result,
     },
     identifyKeySignatures: {
       answers: draft.identifyKeySignatures.answers,
@@ -153,7 +186,13 @@ export function isFirestoreExamAttempt(input: unknown): input is FirestoreExamAt
     return false;
   }
 
-  if (![1, 2, 3, 4, 5].includes(value.currentPage as number)) return false;
+  if (
+    typeof value.currentPage !== "number" ||
+    value.currentPage < 1 ||
+    value.currentPage > EXAM_TOTAL_PAGES
+  ) {
+    return false;
+  }
   if (typeof value.submitted !== "boolean" || typeof value.autoSubmitted !== "boolean") {
     return false;
   }
@@ -171,7 +210,9 @@ export function sanitizeFirestoreExamAttempt(
     value.scale?.clef === "bass" ||
     value.keySignature?.clef === "bass" ||
     value.scaleBMinor?.clef === "bass" ||
-    value.keySignatureCMinor?.clef === "bass"
+    value.keySignatureCMinor?.clef === "bass" ||
+    value.triad?.clef === "bass" ||
+    value.triadBMinor?.clef === "bass"
       ? "bass"
       : "treble";
 
@@ -204,6 +245,16 @@ export function sanitizeFirestoreExamAttempt(
       clef: value.keySignatureCMinor?.clef === "bass" ? "bass" : "treble",
       notes: sanitizeKeySignatureNotes(value.keySignatureCMinor?.notes),
       result: sanitizeResult(value.keySignatureCMinor?.result),
+    },
+    triad: {
+      clef: value.triad?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeScaleNotes(value.triad?.notes),
+      result: sanitizeResult(value.triad?.result),
+    },
+    triadBMinor: {
+      clef: value.triadBMinor?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeScaleNotes(value.triadBMinor?.notes),
+      result: sanitizeResult(value.triadBMinor?.result),
     },
     identifyKeySignatures: {
       answers: Array.isArray(value.identifyKeySignatures?.answers)
