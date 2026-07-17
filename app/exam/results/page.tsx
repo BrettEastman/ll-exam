@@ -69,8 +69,8 @@ export default function ExamResultsPage() {
         <p>C Minor Key Signature Score: {draft.keySignatureCMinor.result?.score ?? 0}%</p>
         <p>D Major Scale Score: {draft.scale.result?.score ?? 0}%</p>
         <p>B Minor Scale Score: {draft.scaleBMinor.result?.score ?? 0}%</p>
-        <p>D Major Triad Score: {draft.triad.result?.score ?? 0}%</p>
-        <p>B Minor Triad Score: {draft.triadBMinor.result?.score ?? 0}%</p>
+        <p>A Major Triad Score: {draft.triad.result?.score ?? 0}%</p>
+        <p>F# Minor Triad Score: {draft.triadBMinor.result?.score ?? 0}%</p>
         <p>
           Identify Key Signatures Score: {draft.identifyKeySignatures.result?.score ?? 0}%
         </p>

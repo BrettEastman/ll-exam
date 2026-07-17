@@ -2,19 +2,19 @@ export const TRIAD_START_PAGE = 5;
 
 export const TRIAD_EXERCISES = [
   {
-    id: "d-major",
-    title: "D Major Triad",
-    description: "Notate a D major triad as stacked chord tones.",
-    prompt: "Notate a D major triad with stacked notes (D, F#, A).",
-    expectedNotes: ["d", "f#", "a"],
+    id: "a-major",
+    title: "A Major Triad",
+    description: "Notate an A major triad as stacked chord tones.",
+    prompt: "Notate an A major triad with stacked notes (A, C#, E).",
+    expectedNotes: ["a", "c#", "e"],
     draftKey: "triad",
   },
   {
-    id: "b-minor",
-    title: "B Minor Triad",
-    description: "Notate a B minor triad as stacked chord tones.",
-    prompt: "Notate a B minor triad with stacked notes (B, D, F#).",
-    expectedNotes: ["b", "d", "f#"],
+    id: "f-sharp-minor",
+    title: "F# Minor Triad",
+    description: "Notate an F# minor triad as stacked chord tones.",
+    prompt: "Notate an F# minor triad with stacked notes (F#, A, C#).",
+    expectedNotes: ["f#", "a", "c#"],
     draftKey: "triadBMinor",
   },
 ] as const;

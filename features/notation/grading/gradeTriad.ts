@@ -1,7 +1,7 @@
 import type { GradeResult } from "../model/types";
 
-export const D_MAJOR_TRIAD = ["d", "f#", "a"] as const;
-export const B_MINOR_TRIAD = ["b", "d", "f#"] as const;
+export const A_MAJOR_TRIAD = ["a", "c#", "e"] as const;
+export const F_SHARP_MINOR_TRIAD = ["f#", "a", "c#"] as const;
 
 export function gradeTriadAttempt(
   input: string[],
@@ -34,10 +34,10 @@ export function gradeTriadAttempt(
   return result;
 }
 
-export function gradeDMajorTriadAttempt(input: string[]): GradeResult {
-  return gradeTriadAttempt(input, D_MAJOR_TRIAD);
+export function gradeAMajorTriadAttempt(input: string[]): GradeResult {
+  return gradeTriadAttempt(input, A_MAJOR_TRIAD);
 }
 
-export function gradeBMinorTriadAttempt(input: string[]): GradeResult {
-  return gradeTriadAttempt(input, B_MINOR_TRIAD);
+export function gradeFSharpMinorTriadAttempt(input: string[]): GradeResult {
+  return gradeTriadAttempt(input, F_SHARP_MINOR_TRIAD);
 }

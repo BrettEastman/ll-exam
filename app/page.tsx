@@ -114,12 +114,12 @@ export default function Home() {
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 3</p>
             <h3>Triad Notation</h3>
-            <p>Build a D major triad by stacking chord tones on one staff.</p>
+            <p>Build an A major triad by stacking chord tones on one staff.</p>
           </article>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 4</p>
             <h3>Triad Notation</h3>
-            <p>Build a B minor triad by stacking chord tones on one staff.</p>
+            <p>Build an F# minor triad by stacking chord tones on one staff.</p>
           </article>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 5</p>

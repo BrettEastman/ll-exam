@@ -39,7 +39,7 @@ export default function TriadExercise({
   allowClefChange = true,
   initialNotes = [],
   onDraftChange,
-  prompt = "Notate a D major triad using stacked chord tones.",
+  prompt = "Notate the requested triad using stacked chord tones.",
 }: TriadExerciseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [localClef, setLocalClef] = useState<ClefType>(initialClef);

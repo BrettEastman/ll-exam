@@ -14,6 +14,7 @@ import {
   SCALE_NOTE_X_STEP,
   STAFF_HEIGHT,
   STAFF_WIDTH,
+  TRIAD_NOTE_X,
 } from "../model/constants";
 import type { ClefType, NotationItem } from "../model/types";
 import { ensureVexFlowFonts } from "@/lib/vexflow-fonts";
@@ -93,7 +94,7 @@ export async function drawStaff(options: DrawStaffOptions): Promise<void> {
     });
 
     const tick = new TickContext();
-    tick.addTickable(chord).preFormat().setX(SCALE_NOTE_X_START + SCALE_NOTE_X_STEP);
+    tick.addTickable(chord).preFormat().setX(TRIAD_NOTE_X);
     chord.setStave(stave);
     chord.setContext(context);
     chord.draw();
