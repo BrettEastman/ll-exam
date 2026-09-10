@@ -7,6 +7,8 @@ export interface ExamProgress {
   cMinorKeySignatureCompleted: boolean;
   triadCompleted: boolean;
   bMinorTriadCompleted: boolean;
+  g7Completed: boolean;
+  eMajor7Completed: boolean;
   identifyKeySignaturesCompleted: boolean;
   canFinish: boolean;
   totalScore: number | null;
@@ -19,6 +21,8 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
   const cMinorKeySignatureCompleted = Boolean(draft.keySignatureCMinor.result);
   const triadCompleted = Boolean(draft.triad.result);
   const bMinorTriadCompleted = Boolean(draft.triadBMinor.result);
+  const g7Completed = Boolean(draft.seventhChordG7.result);
+  const eMajor7Completed = Boolean(draft.seventhChordEMajor7.result);
   const identifyKeySignaturesCompleted = Boolean(draft.identifyKeySignatures.result);
   const canFinish =
     scaleCompleted &&
@@ -27,6 +31,8 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
     cMinorKeySignatureCompleted &&
     triadCompleted &&
     bMinorTriadCompleted &&
+    g7Completed &&
+    eMajor7Completed &&
     identifyKeySignaturesCompleted;
   const totalScore = canFinish
     ? Math.round(
@@ -36,8 +42,10 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
           draft.keySignatureCMinor.result!.score +
           draft.triad.result!.score +
           draft.triadBMinor.result!.score +
+          draft.seventhChordG7.result!.score +
+          draft.seventhChordEMajor7.result!.score +
           draft.identifyKeySignatures.result!.score) /
-          7
+          9
       )
     : null;
 
@@ -48,6 +56,8 @@ export function getExamProgress(draft: ExamDraft): ExamProgress {
     cMinorKeySignatureCompleted,
     triadCompleted,
     bMinorTriadCompleted,
+    g7Completed,
+    eMajor7Completed,
     identifyKeySignaturesCompleted,
     canFinish,
     totalScore,

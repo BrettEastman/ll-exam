@@ -14,6 +14,8 @@ describe("createEmptyDraft", () => {
     expect(draft.keySignatureCMinor.clef).toBe("treble");
     expect(draft.triad.clef).toBe("treble");
     expect(draft.triadBMinor.clef).toBe("treble");
+    expect(draft.seventhChordG7.clef).toBe("treble");
+    expect(draft.seventhChordEMajor7.clef).toBe("treble");
     expect(draft.identifyKeySignatures.answers).toEqual([]);
   });
 });
@@ -51,7 +53,7 @@ describe("sanitizeDraft", () => {
 
     expect(sanitized.startedAt).toBe(10);
     expect(sanitized.updatedAt).toBe(20);
-    expect(sanitized.currentPage).toBe(7);
+    expect(sanitized.currentPage).toBe(9);
     expect(sanitized.selectedClef).toBe("bass");
     expect(sanitized.submitted).toBe(true);
     expect(sanitized.autoSubmitted).toBe(false);
@@ -61,6 +63,8 @@ describe("sanitizeDraft", () => {
     expect(sanitized.keySignatureCMinor.clef).toBe("treble");
     expect(sanitized.triad.clef).toBe("treble");
     expect(sanitized.triadBMinor.clef).toBe("treble");
+    expect(sanitized.seventhChordG7.clef).toBe("treble");
+    expect(sanitized.seventhChordEMajor7.clef).toBe("treble");
     expect(sanitized.identifyKeySignatures.answers).toEqual(["db major", "a major"]);
   });
 
@@ -74,6 +78,8 @@ describe("sanitizeDraft", () => {
     expect(sanitized.keySignatureCMinor.notes).toEqual([]);
     expect(sanitized.triad.notes).toEqual([]);
     expect(sanitized.triadBMinor.notes).toEqual([]);
+    expect(sanitized.seventhChordG7.notes).toEqual([]);
+    expect(sanitized.seventhChordEMajor7.notes).toEqual([]);
     expect(sanitized.identifyKeySignatures.answers).toEqual([]);
   });
 

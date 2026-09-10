@@ -42,6 +42,16 @@ export function createEmptyDraft(now = Date.now()): ExamDraft {
       notes: [],
       result: null,
     },
+    seventhChordG7: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
+    seventhChordEMajor7: {
+      clef: "treble",
+      notes: [],
+      result: null,
+    },
     identifyKeySignatures: {
       answers: [],
       result: null,
@@ -64,7 +74,9 @@ export function sanitizeDraft(input: unknown): ExamDraft {
     draft.scaleBMinor?.clef === "bass" ||
     draft.keySignatureCMinor?.clef === "bass" ||
     draft.triad?.clef === "bass" ||
-    draft.triadBMinor?.clef === "bass"
+    draft.triadBMinor?.clef === "bass" ||
+    draft.seventhChordG7?.clef === "bass" ||
+    draft.seventhChordEMajor7?.clef === "bass"
       ? "bass"
       : "treble";
 
@@ -113,6 +125,20 @@ export function sanitizeDraft(input: unknown): ExamDraft {
       clef: draft.triadBMinor?.clef === "bass" ? "bass" : "treble",
       notes: Array.isArray(draft.triadBMinor?.notes) ? draft.triadBMinor.notes : [],
       result: draft.triadBMinor?.result ?? null,
+    },
+    seventhChordG7: {
+      clef: draft.seventhChordG7?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.seventhChordG7?.notes)
+        ? draft.seventhChordG7.notes
+        : [],
+      result: draft.seventhChordG7?.result ?? null,
+    },
+    seventhChordEMajor7: {
+      clef: draft.seventhChordEMajor7?.clef === "bass" ? "bass" : "treble",
+      notes: Array.isArray(draft.seventhChordEMajor7?.notes)
+        ? draft.seventhChordEMajor7.notes
+        : [],
+      result: draft.seventhChordEMajor7?.result ?? null,
     },
     identifyKeySignatures: {
       answers: Array.isArray(draft.identifyKeySignatures?.answers)

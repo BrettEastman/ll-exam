@@ -27,6 +27,10 @@ export default function Home() {
     Boolean(draft.triad.result) ||
     draft.triadBMinor.notes.length > 0 ||
     Boolean(draft.triadBMinor.result) ||
+    draft.seventhChordG7.notes.length > 0 ||
+    Boolean(draft.seventhChordG7.result) ||
+    draft.seventhChordEMajor7.notes.length > 0 ||
+    Boolean(draft.seventhChordEMajor7.result) ||
     draft.identifyKeySignatures.answers.some((answer) => answer.trim().length > 0) ||
     Boolean(draft.identifyKeySignatures.result);
 
@@ -66,6 +70,16 @@ export default function Home() {
           result: null,
         },
         triadBMinor: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        seventhChordG7: {
+          clef: nextClef,
+          notes: [],
+          result: null,
+        },
+        seventhChordEMajor7: {
           clef: nextClef,
           notes: [],
           result: null,
@@ -123,6 +137,16 @@ export default function Home() {
           </article>
           <article className={styles.panel}>
             <p className={styles.panelTag}>Section 5</p>
+            <h3>Seventh Chord Notation</h3>
+            <p>Build a G7 chord by stacking chord tones on one staff.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Section 6</p>
+            <h3>Seventh Chord Notation</h3>
+            <p>Build an E major 7 chord by stacking chord tones on one staff.</p>
+          </article>
+          <article className={styles.panel}>
+            <p className={styles.panelTag}>Section 7</p>
             <h3>Identify Key Signatures</h3>
             <p>Type key names using flexible formats such as Db or D flat.</p>
           </article>
