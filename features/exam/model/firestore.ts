@@ -1,7 +1,7 @@
 import type { ExamDraft, KeySignatureDraftNote, ScaleDraftNote } from "./types";
 import { EXAM_TOTAL_PAGES } from "./constants";
 
-export const EXAM_ATTEMPT_SCHEMA_VERSION = 5;
+export const EXAM_ATTEMPT_SCHEMA_VERSION = 6;
 
 export interface FirestoreExamAttempt {
   version: number;
@@ -41,6 +41,16 @@ export interface FirestoreExamAttempt {
     clef: "treble" | "bass";
     notes: ScaleDraftNote[];
     result: ExamDraft["triadBMinor"]["result"];
+  };
+  seventhChordG7: {
+    clef: "treble" | "bass";
+    notes: ScaleDraftNote[];
+    result: ExamDraft["seventhChordG7"]["result"];
+  };
+  seventhChordEMajor7: {
+    clef: "treble" | "bass";
+    notes: ScaleDraftNote[];
+    result: ExamDraft["seventhChordEMajor7"]["result"];
   };
   identifyKeySignatures: {
     answers: string[];
@@ -111,6 +121,28 @@ export function toFirestoreExamAttempt(draft: ExamDraft): FirestoreExamAttempt {
         return { key: note.key, accidental: note.accidental };
       }),
       result: draft.triadBMinor.result,
+    },
+    seventhChordG7: {
+      clef: draft.seventhChordG7.clef,
+      notes: draft.seventhChordG7.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
+      result: draft.seventhChordG7.result,
+    },
+    seventhChordEMajor7: {
+      clef: draft.seventhChordEMajor7.clef,
+      notes: draft.seventhChordEMajor7.notes.map((note) => {
+        if (note.accidental === undefined) {
+          return { key: note.key };
+        }
+
+        return { key: note.key, accidental: note.accidental };
+      }),
+      result: draft.seventhChordEMajor7.result,
     },
     identifyKeySignatures: {
       answers: draft.identifyKeySignatures.answers,
@@ -212,7 +244,9 @@ export function sanitizeFirestoreExamAttempt(
     value.scaleBMinor?.clef === "bass" ||
     value.keySignatureCMinor?.clef === "bass" ||
     value.triad?.clef === "bass" ||
-    value.triadBMinor?.clef === "bass"
+    value.triadBMinor?.clef === "bass" ||
+    value.seventhChordG7?.clef === "bass" ||
+    value.seventhChordEMajor7?.clef === "bass"
       ? "bass"
       : "treble";
 
@@ -255,6 +289,16 @@ export function sanitizeFirestoreExamAttempt(
       clef: value.triadBMinor?.clef === "bass" ? "bass" : "treble",
       notes: sanitizeScaleNotes(value.triadBMinor?.notes),
       result: sanitizeResult(value.triadBMinor?.result),
+    },
+    seventhChordG7: {
+      clef: value.seventhChordG7?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeScaleNotes(value.seventhChordG7?.notes),
+      result: sanitizeResult(value.seventhChordG7?.result),
+    },
+    seventhChordEMajor7: {
+      clef: value.seventhChordEMajor7?.clef === "bass" ? "bass" : "treble",
+      notes: sanitizeScaleNotes(value.seventhChordEMajor7?.notes),
+      result: sanitizeResult(value.seventhChordEMajor7?.result),
     },
     identifyKeySignatures: {
       answers: Array.isArray(value.identifyKeySignatures?.answers)

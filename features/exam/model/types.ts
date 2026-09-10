@@ -52,6 +52,16 @@ export interface ExamDraft {
     notes: ScaleDraftNote[];
     result: SectionResult | null;
   };
+  seventhChordG7: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  };
+  seventhChordEMajor7: {
+    clef: ClefType;
+    notes: ScaleDraftNote[];
+    result: SectionResult | null;
+  };
   identifyKeySignatures: {
     answers: string[];
     result: SectionResult | null;

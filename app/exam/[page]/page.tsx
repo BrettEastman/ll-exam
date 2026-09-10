@@ -27,11 +27,17 @@ import {
 } from "@/features/notation/grading/gradeKeySignature";
 import { gradeIdentifyKeySignaturesAttempt } from "@/features/notation/grading/gradeIdentifyKeySignatures";
 import { gradeTriadAttempt } from "@/features/notation/grading/gradeTriad";
+import { gradeSeventhChordAttempt } from "@/features/notation/grading/gradeSeventhChord";
 import {
   TRIAD_EXERCISES,
   TRIAD_START_PAGE,
   type TriadDraftKey,
 } from "@/features/exam/model/triads";
+import {
+  SEVENTH_CHORD_EXERCISES,
+  SEVENTH_CHORD_START_PAGE,
+  type SeventhChordDraftKey,
+} from "@/features/exam/model/sevenths";
 import type {
   ExamDraft,
   KeySignatureDraftNote,
@@ -83,6 +89,30 @@ function gradeTriadDraftSection(
   );
 
   return gradeTriadAttempt(notes, exercise.expectedNotes).score;
+}
+
+function getSeventhChordExerciseForPage(page: number) {
+  const index = page - SEVENTH_CHORD_START_PAGE;
+  if (index < 0 || index >= SEVENTH_CHORD_EXERCISES.length) {
+    return null;
+  }
+  return SEVENTH_CHORD_EXERCISES[index];
+}
+
+function gradeSeventhChordDraftSection(
+  draft: ExamDraft,
+  draftKey: SeventhChordDraftKey,
+): number {
+  const exercise = SEVENTH_CHORD_EXERCISES.find((item) => item.draftKey === draftKey);
+  if (!exercise) {
+    return 0;
+  }
+
+  const notes = draft[draftKey].notes.map((note) =>
+    normalizeKeyToPitchClass(note.key, note.accidental),
+  );
+
+  return gradeSeventhChordAttempt(notes, exercise.expectedNotes).score;
 }
 
 function finalizeDraftForSubmission(
@@ -146,6 +176,20 @@ function finalizeDraftForSubmission(
     {} as Record<TriadDraftKey, NonNullable<ExamDraft["triad"]["result"]>>,
   );
 
+  const seventhChordResults = SEVENTH_CHORD_EXERCISES.reduce(
+    (acc, exercise) => {
+      const current = draft[exercise.draftKey];
+      acc[exercise.draftKey] =
+        current.result ??
+        ({
+          score: gradeSeventhChordDraftSection(draft, exercise.draftKey),
+          submittedAt,
+        } as const);
+      return acc;
+    },
+    {} as Record<SeventhChordDraftKey, NonNullable<ExamDraft["triad"]["result"]>>,
+  );
+
   return {
     ...draft,
     submitted: true,
@@ -175,6 +219,16 @@ function finalizeDraftForSubmission(
         return acc;
       },
       {} as Pick<ExamDraft, TriadDraftKey>,
+    ),
+    ...SEVENTH_CHORD_EXERCISES.reduce(
+      (acc, exercise) => {
+        acc[exercise.draftKey] = {
+          ...draft[exercise.draftKey],
+          result: seventhChordResults[exercise.draftKey],
+        };
+        return acc;
+      },
+      {} as Pick<ExamDraft, SeventhChordDraftKey>,
     ),
     identifyKeySignatures: {
       ...draft.identifyKeySignatures,
@@ -262,6 +316,20 @@ function submitPageDraft(draft: ExamDraft, page: number): ExamDraft {
         ...draft[triadExercise.draftKey],
         result: {
           score: gradeTriadDraftSection(draft, triadExercise.draftKey),
+          submittedAt,
+        },
+      },
+    };
+  }
+
+  const seventhChordExercise = getSeventhChordExerciseForPage(page);
+  if (seventhChordExercise) {
+    return {
+      ...draft,
+      [seventhChordExercise.draftKey]: {
+        ...draft[seventhChordExercise.draftKey],
+        result: {
+          score: gradeSeventhChordDraftSection(draft, seventhChordExercise.draftKey),
           submittedAt,
         },
       },
@@ -436,6 +504,28 @@ export default function ExamPage() {
     [patchDraft],
   );
 
+  const handleSeventhChordSectionDraftChange = useCallback(
+    (draftKey: SeventhChordDraftKey, value: ExamDraft[SeventhChordDraftKey]) => {
+      patchDraft((prev) => {
+        const current = prev[draftKey];
+        if (
+          current.clef === value.clef &&
+          current.result?.score === value.result?.score &&
+          current.result?.submittedAt === value.result?.submittedAt &&
+          areScaleNotesEqual(current.notes, value.notes)
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [draftKey]: value,
+        };
+      });
+    },
+    [patchDraft],
+  );
+
   // Redirect invalid pages
   useEffect(() => {
     if (
@@ -488,6 +578,7 @@ export default function ExamPage() {
   const currentExam =
     EXAM_PAGE_META[currentPage as keyof typeof EXAM_PAGE_META];
   const currentTriadExercise = getTriadExerciseForPage(currentPage);
+  const currentSeventhChordExercise = getSeventhChordExerciseForPage(currentPage);
 
   const handleNext = () => {
     patchDraft((prev) => submitPageDraft(prev, currentPage));
@@ -582,9 +673,25 @@ export default function ExamPage() {
             }
             prompt={currentTriadExercise.prompt}
           />
+        ) : currentSeventhChordExercise ? (
+          <TriadExercise
+            key={`page-${currentPage}-${currentSeventhChordExercise.id}`}
+            initialClef={draft[currentSeventhChordExercise.draftKey].clef}
+            clef={draft.selectedClef}
+            allowClefChange={false}
+            initialNotes={draft[currentSeventhChordExercise.draftKey].notes}
+            onDraftChange={(payload) =>
+              handleSeventhChordSectionDraftChange(
+                currentSeventhChordExercise.draftKey,
+                payload,
+              )
+            }
+            prompt={currentSeventhChordExercise.prompt}
+            maxNotes={4}
+          />
         ) : (
           <IdentifyKeySignaturesExercise
-            key="page-7-identify"
+            key={`page-${EXAM_TOTAL_PAGES}-identify`}
             initialAnswers={draft.identifyKeySignatures.answers}
             onDraftChange={handleIdentifyKeySignaturesDraftChange}
             clef={draft.selectedClef}

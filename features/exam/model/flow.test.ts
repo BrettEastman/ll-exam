@@ -11,6 +11,8 @@ describe("getExamProgress", () => {
     draft.keySignatureCMinor.result = { score: 80, submittedAt: 290 };
     draft.triad.result = { score: 100, submittedAt: 295 };
     draft.triadBMinor.result = { score: 90, submittedAt: 298 };
+    draft.seventhChordG7.result = { score: 75, submittedAt: 299 };
+    draft.seventhChordEMajor7.result = { score: 88, submittedAt: 300 };
 
     const progress = getExamProgress(draft);
     expect(progress.scaleCompleted).toBe(true);
@@ -19,6 +21,8 @@ describe("getExamProgress", () => {
     expect(progress.cMinorKeySignatureCompleted).toBe(true);
     expect(progress.triadCompleted).toBe(true);
     expect(progress.bMinorTriadCompleted).toBe(true);
+    expect(progress.g7Completed).toBe(true);
+    expect(progress.eMajor7Completed).toBe(true);
     expect(progress.identifyKeySignaturesCompleted).toBe(false);
     expect(progress.canFinish).toBe(false);
     expect(progress.totalScore).toBeNull();
@@ -32,6 +36,8 @@ describe("getExamProgress", () => {
     draft.keySignatureCMinor.result = { score: 80, submittedAt: 400 };
     draft.triad.result = { score: 100, submittedAt: 425 };
     draft.triadBMinor.result = { score: 90, submittedAt: 440 };
+    draft.seventhChordG7.result = { score: 75, submittedAt: 445 };
+    draft.seventhChordEMajor7.result = { score: 88, submittedAt: 447 };
     draft.identifyKeySignatures.result = { score: 75, submittedAt: 450 };
 
     const progress = getExamProgress(draft);
@@ -41,8 +47,10 @@ describe("getExamProgress", () => {
     expect(progress.cMinorKeySignatureCompleted).toBe(true);
     expect(progress.triadCompleted).toBe(true);
     expect(progress.bMinorTriadCompleted).toBe(true);
+    expect(progress.g7Completed).toBe(true);
+    expect(progress.eMajor7Completed).toBe(true);
     expect(progress.identifyKeySignaturesCompleted).toBe(true);
     expect(progress.canFinish).toBe(true);
-    expect(progress.totalScore).toBe(85);
+    expect(progress.totalScore).toBe(84);
   });
 });

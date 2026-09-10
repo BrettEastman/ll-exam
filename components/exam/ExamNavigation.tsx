@@ -20,11 +20,11 @@ export default function ExamNavigation({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
   const isKeySignatureSection = currentPage <= 2;
-  const isScaleSection = currentPage >= 3 && currentPage <= 6;
+  const isScaleSection = currentPage >= 3 && currentPage < totalPages;
   const sectionLabel = isKeySignatureSection
     ? "Section 1: Key Signatures"
     : isScaleSection
-      ? "Section 2: Scales + Triads"
+      ? "Section 2: Scales + Chords"
       : "Section 3: Identify Key Signatures";
 
   return (

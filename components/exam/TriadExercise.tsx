@@ -27,6 +27,7 @@ interface TriadExerciseProps {
     result: SectionResult | null;
   }) => void;
   prompt?: string;
+  maxNotes?: number;
 }
 
 function normalizeTriadNote(item: ScaleDraftNote): string {
@@ -40,6 +41,7 @@ export default function TriadExercise({
   initialNotes = [],
   onDraftChange,
   prompt = "Notate the requested triad using stacked chord tones.",
+  maxNotes = 3,
 }: TriadExerciseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [localClef, setLocalClef] = useState<ClefType>(initialClef);
@@ -69,7 +71,10 @@ export default function TriadExercise({
     });
   }, [clef, notes, onDraftChange]);
 
-  const notesCountLabel = useMemo(() => `${notes.length}/3`, [notes.length]);
+  const notesCountLabel = useMemo(
+    () => `${notes.length}/${maxNotes}`,
+    [notes.length, maxNotes],
+  );
 
   const upsertNote = (key: string) => {
     setNotes((prev) => {
@@ -84,7 +89,7 @@ export default function TriadExercise({
       }
 
       const withoutSamePitch = prev.filter((item) => item.key !== key);
-      if (withoutSamePitch.length >= 3) {
+      if (withoutSamePitch.length >= maxNotes) {
         return withoutSamePitch;
       }
 

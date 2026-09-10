@@ -71,6 +71,8 @@ export default function ExamResultsPage() {
         <p>B Minor Scale Score: {draft.scaleBMinor.result?.score ?? 0}%</p>
         <p>A Major Triad Score: {draft.triad.result?.score ?? 0}%</p>
         <p>F# Minor Triad Score: {draft.triadBMinor.result?.score ?? 0}%</p>
+        <p>G7 Score: {draft.seventhChordG7.result?.score ?? 0}%</p>
+        <p>E major 7 Score: {draft.seventhChordEMajor7.result?.score ?? 0}%</p>
         <p>
           Identify Key Signatures Score: {draft.identifyKeySignatures.result?.score ?? 0}%
         </p>

@@ -129,6 +129,16 @@ export default function AuthPage() {
           notes: [],
           result: null,
         },
+        seventhChordG7: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
+        seventhChordEMajor7: {
+          clef: selectedClef,
+          notes: [],
+          result: null,
+        },
         keySignatureCMinor: {
           clef: selectedClef,
           notes: [],
