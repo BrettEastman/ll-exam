@@ -16,12 +16,12 @@ Lydian Lab Music Theory Exam is a two-page interactive music theory placement ex
 
 ## Stack
 
-- Next.js 15 + React 19 + TypeScript
+- Next.js 16 + React 19 + TypeScript
 - VexFlow 5 (native API, SVG backend)
 - Firebase Authentication (email/password + verification)
 - Firestore persistence (`examAttempts/{uid}`)
 - Vanilla CSS (light mode only)
-- Bun for dependency management and test execution
+- pnpm for dependency management, Vitest for tests
 
 ## Architecture Overview
 
@@ -39,7 +39,7 @@ Lydian Lab Music Theory Exam is a two-page interactive music theory placement ex
 1. Install dependencies:
 
 ```bash
-bun install
+pnpm install
 ```
 
 2. Create `.env.local` with Firebase web config:
@@ -56,7 +56,7 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 3. Run the app:
 
 ```bash
-bun run dev
+pnpm dev
 ```
 
 Open `http://localhost:3000`.
@@ -81,14 +81,14 @@ service cloud.firestore {
 
 ## Scripts
 
-- `bun run dev` - start development server
-- `bun run lint` - run ESLint
-- `bun run test` - run Bun tests
-- `bun run build` - production build
-- `bun run start` - serve production build
+- `pnpm dev` - start development server
+- `pnpm lint` - run ESLint
+- `pnpm test` - run Vitest tests
+- `pnpm build` - production build
+- `pnpm start` - serve production build
 
 ## Notes
 
 - This project intentionally uses a light-only visual system.
 - Styling is semantic HTML + vanilla CSS (no other UI frameworks).
-- The notation interaction model is tested with Bun-based unit tests.
+- The notation interaction model is tested with Vitest unit tests.

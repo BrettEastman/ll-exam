@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import {
   NOTE_TOP_LINE_INDEX,
   defaultStaffGeometry,

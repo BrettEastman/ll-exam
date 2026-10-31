@@ -20,6 +20,8 @@ export function useExamDraft() {
 
   useEffect(() => {
     const hydrated = loadDraft();
+    // localStorage is only readable after mount; hydrating here avoids an SSR mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(hydrated);
     setIsHydrated(true);
     setSyncStatus("idle");
@@ -34,6 +36,8 @@ export function useExamDraft() {
     if (!isHydrated || !isReady) return;
 
     if (!isConfigured) {
+      // Mirrors external auth/config state into sync status.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSyncStatus("disabled");
       setSyncMessage("Firebase is not configured. Saving locally only.");
       setIsRemoteLoaded(true);

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createEmptyDraft } from "../persistence/draft";
 import { buildExamReview } from "./review";
 
