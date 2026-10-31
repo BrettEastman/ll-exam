@@ -6,7 +6,7 @@ Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra
 
 ## Rewrite Constraints
 
-- Use Next.js 15, React 19, TypeScript, and VexFlow 5.
+- Use Next.js 16, React 19, TypeScript, and VexFlow 5.
 - Use native VexFlow API (`Renderer`, `Stave`, `StaveNote`, `Accidental`, `KeySignature`, `Formatter`) for interactive notation.
 - Do not introduce new UI frameworks. Styling must be vanilla CSS.
 - Light mode only. Do not add dark-mode media queries.
@@ -75,7 +75,7 @@ Rebuild this app from the ground up with a VexFlow-first architecture, no Chakra
 - [x] Unit tests for grading and notation model transforms.
 - [x] Integration checks for full two-page exam flow.
 - [x] Manual QA for treble/bass notation interactions.
-- [x] Run `bun run lint` and `bun run build` before handoff.
+- [x] Run `pnpm lint`, `pnpm test`, and `pnpm build` before handoff.
 
 ## Execution Notes For OpenCode Agents
 

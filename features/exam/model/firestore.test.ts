@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createEmptyDraft } from "@/features/exam/persistence/draft";
 import {
   EXAM_ATTEMPT_SCHEMA_VERSION,

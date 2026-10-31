@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   E_MAJOR_7_CHORD,
   G7_CHORD,
